@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Casa neagră -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M18,11c0.7,0 1.37,0.1 2,0.29V9l-8,-6L4,9v12h7.68C11.25,20.09 11,19.08 11,18C11,14.13 14.13,11 18,11z" />
+
+    <!-- Scutul alb, centrat în casă -->
+    <group
+        android:translateX="6"
+        android:translateY="11.26"
+        android:scaleX="0.6"
+        android:scaleY="0.6">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M17,11c0.34,0 0.67,0.04 1,0.09V6.27L10.5,3L3,6.27v4.91c0,4.54 3.2,8.79 7.5,9.82c0.55,-0.13 1.08,-0.32 1.6,-0.55C11.41,19.47 11,18.28 11,17C11,13.69 13.69,11 17,11z"/>
+    </group>
+
+</vector>
