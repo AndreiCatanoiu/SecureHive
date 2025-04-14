@@ -5,4 +5,9 @@
     <string name="title_account">Account</string>
     <string name="list_is_empty">You currently have no devices associated with your account.</string>
     <string name="no_alerts">All good at the moment!</string>
+    <string name="edit_profile">Edit your profile</string>
+    <string name="add_devices">Add a device to your account</string>
+    <string name="editBtn">Edit</string>
+    <string name="addDeviceBtn">Add</string>
+    <string name="logOutBtn">Log Out</string>
 </resources>
