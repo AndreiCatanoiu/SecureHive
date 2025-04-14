@@ -4,30 +4,37 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import licenta.andrei.catanoiu.securehive.databinding.FragmentAccountBinding;
 
 public class AccountFragment extends Fragment {
 
-private FragmentAccountBinding binding;
+    private FragmentAccountBinding binding;
 
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-            ViewGroup container, Bundle savedInstanceState) {
-        AccountViewModel dashboardViewModel =
-                new ViewModelProvider(this).get(AccountViewModel.class);
+                             ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentAccountBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
 
-    binding = FragmentAccountBinding.inflate(inflater, container, false);
-    View root = binding.getRoot();
+        // Setează acțiunile pentru butoane
+        binding.buttonEditProfile.setOnClickListener(v -> {
+            // Aici adaugi logica de editare a profilului
+        });
 
-        final TextView textView = binding.textAccount;
-        dashboardViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        binding.buttonAddDevices.setOnClickListener(v -> {
+            // Aici adaugi logica de adăugare dispozitive
+        });
+
+        binding.buttonLogout.setOnClickListener(v -> {
+            // Aici adaugi logica de logout
+        });
+
         return root;
     }
 
-@Override
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
