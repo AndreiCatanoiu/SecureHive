@@ -4,30 +4,51 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
+
+import java.util.ArrayList;
+
 import licenta.andrei.catanoiu.securehive.databinding.FragmentHomeBinding;
 
 public class HomeFragment extends Fragment {
 
-private FragmentHomeBinding binding;
+    private FragmentHomeBinding binding;
+    private ArrayList<String> devices;
+    private ArrayAdapter<String> adapter;
 
-    public View onCreateView(@NonNull LayoutInflater inflater,
-            ViewGroup container, Bundle savedInstanceState) {
-        HomeViewModel homeViewModel =
-                new ViewModelProvider(this).get(HomeViewModel.class);
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentHomeBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
 
-    binding = FragmentHomeBinding.inflate(inflater, container, false);
-    View root = binding.getRoot();
+        ListView listView = binding.listDevices;
+        TextView emptyView = binding.textEmpty;
 
-        final TextView textView = binding.textHome;
-        homeViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        devices = new ArrayList<>();
+
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, devices);
+        listView.setAdapter(adapter);
+        updateVisibility();
+
         return root;
     }
 
-@Override
+    private void updateVisibility() {
+        if (devices.isEmpty()) {
+            binding.listDevices.setVisibility(View.GONE);
+            binding.textEmpty.setVisibility(View.VISIBLE);
+        } else {
+            binding.listDevices.setVisibility(View.VISIBLE);
+            binding.textEmpty.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;
