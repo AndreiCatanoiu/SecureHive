@@ -4,30 +4,43 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
+
+import java.util.ArrayList;
+
 import licenta.andrei.catanoiu.securehive.databinding.FragmentAlertsBinding;
 
 public class AlertsFragment extends Fragment {
 
-private FragmentAlertsBinding binding;
+    private FragmentAlertsBinding binding;
+    private ArrayList<String> alerts;
+    private ArrayAdapter<String> adapter;
 
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
-            ViewGroup container, Bundle savedInstanceState) {
-        AlertsViewModel alertsViewModel =
-                new ViewModelProvider(this).get(AlertsViewModel.class);
+                             ViewGroup container, Bundle savedInstanceState) {
+        binding = FragmentAlertsBinding.inflate(inflater, container, false);
+        View root = binding.getRoot();
 
-    binding = FragmentAlertsBinding.inflate(inflater, container, false);
-    View root = binding.getRoot();
+        ListView listView = binding.listAlerts;
+        TextView emptyView = binding.textEmptyAlerts;
 
-        final TextView textView = binding.textAlerts;
-        alertsViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
+        listView.setEmptyView(emptyView);
+
+        alerts = new ArrayList<>();
+
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, alerts);
+        listView.setAdapter(adapter);
+
         return root;
     }
 
-@Override
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
         binding = null;

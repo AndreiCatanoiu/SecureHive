@@ -4,4 +4,5 @@
     <string name="title_alerts">Alerts</string>
     <string name="title_account">Account</string>
     <string name="list_is_empty">You currently have no devices associated with your account.</string>
+    <string name="no_alerts">All good at the moment!</string>
 </resources>
