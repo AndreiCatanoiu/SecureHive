@@ -1,4 +1,4 @@
-package licenta.andrei.catanoiu.securehive.ui.dashboard;
+package licenta.andrei.catanoiu.securehive.ui.account;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -8,21 +8,21 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
-import licenta.andrei.catanoiu.securehive.databinding.FragmentDashboardBinding;
+import licenta.andrei.catanoiu.securehive.databinding.FragmentAccountBinding;
 
-public class DashboardFragment extends Fragment {
+public class AccountFragment extends Fragment {
 
-private FragmentDashboardBinding binding;
+private FragmentAccountBinding binding;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
             ViewGroup container, Bundle savedInstanceState) {
-        DashboardViewModel dashboardViewModel =
-                new ViewModelProvider(this).get(DashboardViewModel.class);
+        AccountViewModel dashboardViewModel =
+                new ViewModelProvider(this).get(AccountViewModel.class);
 
-    binding = FragmentDashboardBinding.inflate(inflater, container, false);
+    binding = FragmentAccountBinding.inflate(inflater, container, false);
     View root = binding.getRoot();
 
-        final TextView textView = binding.textDashboard;
+        final TextView textView = binding.textAccount;
         dashboardViewModel.getText().observe(getViewLifecycleOwner(), textView::setText);
         return root;
     }

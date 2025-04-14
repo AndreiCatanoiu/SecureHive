@@ -12,14 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="licenta.andrei.catanoiu.securehive.ui.dashboard.DashboardFragment"
+        android:id="@+id/navigation_alerts"
+        android:name="licenta.andrei.catanoiu.securehive.ui.alerts.AlertsFragment"
         android:label="@string/title_alerts"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_alerts" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="licenta.andrei.catanoiu.securehive.ui.notifications.NotificationsFragment"
+        android:id="@+id/navigation_account"
+        android:name="licenta.andrei.catanoiu.securehive.ui.account.AccountFragment"
         android:label="@string/title_account"
-        tools:layout="@layout/fragment_notifications" />
+        tools:layout="@layout/fragment_account" />
 </navigation>

@@ -1,16 +1,16 @@
-package licenta.andrei.catanoiu.securehive.ui.notifications;
+package licenta.andrei.catanoiu.securehive.ui.alerts;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class NotificationsViewModel extends ViewModel {
+public class AlertsViewModel extends ViewModel {
 
     private final MutableLiveData<String> mText;
 
-    public NotificationsViewModel() {
+    public AlertsViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is notifications fragment");
+        mText.setValue("This is alerts fragment");
     }
 
     public LiveData<String> getText() {
