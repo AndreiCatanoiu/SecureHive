@@ -1,4 +1,4 @@
-package licenta.andrei.catanoiu.securehive.ui.alerts;
+package licenta.andrei.catanoiu.securehive.fragments.alerts;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
