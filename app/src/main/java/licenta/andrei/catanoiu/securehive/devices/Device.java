@@ -1,4 +1,4 @@
-package licenta.andrei.catanoiu.securehive;
+package licenta.andrei.catanoiu.securehive.devices;
 
 public class Device {
     private String id;

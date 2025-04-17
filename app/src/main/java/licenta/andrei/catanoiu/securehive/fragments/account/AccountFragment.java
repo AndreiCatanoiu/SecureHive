@@ -9,6 +9,8 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +26,7 @@ import androidx.fragment.app.Fragment;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.regex.Pattern;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import licenta.andrei.catanoiu.securehive.R;
@@ -43,7 +46,6 @@ public class AccountFragment extends Fragment {
     private static final String KEY_NAME = "user_name";
     private static final String KEY_EMAIL = "user_email";
     private static final String KEY_PHONE = "user_phone";
-    private static final String KEY_LOCATION = "user_location";
     private static final String KEY_PROFILE_IMAGE = "user_profile_image";
 
     private static final String TAG = "AccountFragment";
@@ -66,13 +68,13 @@ public class AccountFragment extends Fragment {
             });
 
             binding.buttonLogout.setOnClickListener(v -> {
-                Toast.makeText(getContext(), "Delogare...", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Logging out...", Toast.LENGTH_SHORT).show();
             });
 
             return root;
         } catch (Exception e) {
-            Log.e(TAG, "Eroare la crearea fragmentului", e);
-            Toast.makeText(getContext(), "Eroare la încărcarea profilului: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Log.e(TAG, "Error creating fragment", e);
+            Toast.makeText(getContext(), "Error loading profile: " + e.getMessage(), Toast.LENGTH_LONG).show();
             return new View(getContext());
         }
     }
@@ -82,25 +84,23 @@ public class AccountFragment extends Fragment {
             String name = sharedPreferences.getString(KEY_NAME, "Andrei Catanoiu");
             String email = sharedPreferences.getString(KEY_EMAIL, "andrei@example.com");
             String phone = sharedPreferences.getString(KEY_PHONE, "+40 712 345 678");
-            String location = sharedPreferences.getString(KEY_LOCATION, "Pitești, Argeș");
             String profileImageString = sharedPreferences.getString(KEY_PROFILE_IMAGE, "");
 
             binding.textName.setText(name);
             binding.textEmail.setText(email);
             binding.textPhone.setText(phone);
-            binding.textLocation.setText(location);
 
             if (!profileImageString.isEmpty()) {
                 try {
                     Bitmap profileImage = decodeBase64Image(profileImageString);
                     binding.profileImage.setImageBitmap(profileImage);
                 } catch (Exception e) {
-                    Log.e(TAG, "Eroare la decodarea imaginii", e);
+                    Log.e(TAG, "Error decoding image", e);
                 }
             }
         } catch (Exception e) {
-            Log.e(TAG, "Eroare la încărcarea profilului", e);
-            Toast.makeText(getContext(), "Eroare la încărcarea profilului: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Error loading profile", e);
+            Toast.makeText(getContext(), "Error loading profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -110,12 +110,11 @@ public class AccountFragment extends Fragment {
             LayoutInflater inflater = getLayoutInflater();
             View dialogView = inflater.inflate(R.layout.dialog_edit_profile, null);
             builder.setView(dialogView)
-                    .setTitle("Editează profilul");
+                    .setTitle("Edit Profile");
 
             EditText editName = dialogView.findViewById(R.id.editName);
             EditText editEmail = dialogView.findViewById(R.id.editEmail);
             EditText editPhone = dialogView.findViewById(R.id.editPhone);
-            EditText editLocation = dialogView.findViewById(R.id.editLocation);
             Button buttonChangePhoto = dialogView.findViewById(R.id.buttonChangePhoto);
             Button buttonCancel = dialogView.findViewById(R.id.buttonCancel);
             Button buttonSave = dialogView.findViewById(R.id.buttonSaveProfile);
@@ -124,7 +123,6 @@ public class AccountFragment extends Fragment {
             editName.setText(binding.textName.getText());
             editEmail.setText(binding.textEmail.getText());
             editPhone.setText(binding.textPhone.getText());
-            editLocation.setText(binding.textLocation.getText());
 
             dialogProfileImage.setImageDrawable(binding.profileImage.getDrawable());
 
@@ -135,17 +133,37 @@ public class AccountFragment extends Fragment {
                 Intent intent = new Intent();
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Selectează o imagine"), PICK_IMAGE_REQUEST);
+                startActivityForResult(Intent.createChooser(intent, "Select an image"), PICK_IMAGE_REQUEST);
             });
 
             buttonCancel.setOnClickListener(v -> currentDialog.dismiss());
+
+            buttonSave.setEnabled(false);
+
+            TextWatcher textWatcher = new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    validateInputs(editName, editEmail, editPhone, buttonSave);
+                }
+            };
+
+            editName.addTextChangedListener(textWatcher);
+            editEmail.addTextChangedListener(textWatcher);
+            editPhone.addTextChangedListener(textWatcher);
+
+            validateInputs(editName, editEmail, editPhone, buttonSave);
 
             buttonSave.setOnClickListener(v -> {
                 try {
                     String newName = editName.getText().toString().trim();
                     String newEmail = editEmail.getText().toString().trim();
                     String newPhone = editPhone.getText().toString().trim();
-                    String newLocation = editLocation.getText().toString().trim();
 
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     if (!newName.isEmpty()) {
@@ -160,27 +178,62 @@ public class AccountFragment extends Fragment {
                         editor.putString(KEY_PHONE, newPhone);
                         binding.textPhone.setText(newPhone);
                     }
-                    if (!newLocation.isEmpty()) {
-                        editor.putString(KEY_LOCATION, newLocation);
-                        binding.textLocation.setText(newLocation);
-                    }
 
                     binding.profileImage.setImageDrawable(dialogProfileImage.getDrawable());
                     saveProfileImage();
 
                     editor.apply();
 
-                    Toast.makeText(getContext(), "Profilul a fost actualizat", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Profile has been updated", Toast.LENGTH_SHORT).show();
                     currentDialog.dismiss();
                 } catch (Exception e) {
-                    Log.e(TAG, "Eroare la salvarea profilului", e);
-                    Toast.makeText(getContext(), "Eroare la salvarea profilului: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Error saving profile", e);
+                    Toast.makeText(getContext(), "Error saving profile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 }
             });
         } catch (Exception e) {
-            Log.e(TAG, "Eroare la afișarea dialogului", e);
-            Toast.makeText(getContext(), "Eroare la afișarea dialogului: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Error displaying dialog", e);
+            Toast.makeText(getContext(), "Error displaying dialog: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void validateInputs(EditText nameField, EditText emailField, EditText phoneField, Button saveButton) {
+        String name = nameField.getText().toString().trim();
+        String email = emailField.getText().toString().trim();
+        String phone = phoneField.getText().toString().trim();
+
+        boolean isNameValid = validateName(name);
+        boolean isEmailValid = validateEmail(email);
+        boolean isPhoneValid = validatePhoneNumber(phone);
+
+        if (!isNameValid && !name.isEmpty()) {
+            nameField.setError("Name must be at least 5 characters");
+        }
+
+        if (!isEmailValid && !email.isEmpty()) {
+            emailField.setError("Please enter a valid email address");
+        }
+
+        if (!isPhoneValid && !phone.isEmpty()) {
+            phoneField.setError("Please enter a valid Romanian phone number");
+        }
+
+        saveButton.setEnabled(isNameValid && isEmailValid && isPhoneValid);
+    }
+
+    private boolean validateName(String name) {
+        return name.length() >= 5;
+    }
+
+    private boolean validateEmail(String email) {
+        String emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        return Pattern.matches(emailPattern, email);
+    }
+    private boolean validatePhoneNumber(String phone) {
+        String cleanPhone = phone.replaceAll("[\\s.]", "");
+
+        String phonePattern = "^(0|\\+40)7\\d{8}$";
+        return Pattern.matches(phonePattern, cleanPhone);
     }
 
     private void saveProfileImage() {
@@ -197,7 +250,7 @@ public class AccountFragment extends Fragment {
 
             binding.profileImage.setDrawingCacheEnabled(false);
         } catch (Exception e) {
-            Log.e(TAG, "Eroare la salvarea imaginii de profil", e);
+            Log.e(TAG, "Error saving profile image", e);
         }
     }
 
@@ -225,8 +278,8 @@ public class AccountFragment extends Fragment {
                     dialogProfileImage.setImageBitmap(bitmap);
                 }
             } catch (IOException e) {
-                Log.e(TAG, "Eroare la procesarea imaginii selectate", e);
-                Toast.makeText(getContext(), "Eroare la încărcarea imaginii: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Log.e(TAG, "Error processing selected image", e);
+                Toast.makeText(getContext(), "Error loading image: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
     }

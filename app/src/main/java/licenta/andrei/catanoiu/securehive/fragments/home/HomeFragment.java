@@ -2,13 +2,13 @@ package licenta.andrei.catanoiu.securehive.fragments.home;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,12 +24,13 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import licenta.andrei.catanoiu.securehive.Device;
-import licenta.andrei.catanoiu.securehive.DeviceAdapter;
-import licenta.andrei.catanoiu.securehive.SwipeToDeleteHelper;
+import licenta.andrei.catanoiu.securehive.R;
+import licenta.andrei.catanoiu.securehive.activityes.DeviceInfoActivity;
 import licenta.andrei.catanoiu.securehive.databinding.FragmentHomeBinding;
+import licenta.andrei.catanoiu.securehive.devices.Device;
+import licenta.andrei.catanoiu.securehive.devices.DeviceAdapter;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements DeviceAdapter.DeviceAdapterListener {
 
     private FragmentHomeBinding binding;
     private ArrayList<Device> devices;
@@ -51,10 +52,10 @@ public class HomeFragment extends Fragment {
             devices.addAll(getDevicesList());
         } catch (Exception e) {
             clearDevicesPrefs();
-            Toast.makeText(getContext(), "Inițializare listă nouă de dispozitive", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Initializing new device list", Toast.LENGTH_SHORT).show();
         }
 
-        adapter = new DeviceAdapter(getContext(), devices);
+        adapter = new DeviceAdapter(getContext(), devices, this);
         listView.setAdapter(adapter);
         updateVisibility();
 
@@ -62,20 +63,17 @@ public class HomeFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position >= 0 && position < devices.size()) {
-                    showDeviceDetails(devices.get(position));
+                    Device selectedDevice = devices.get(position);
+                    Intent intent = new Intent(getContext(), DeviceInfoActivity.class);
+                    // Send device data
+                    intent.putExtra("DEVICE_ID", selectedDevice.getId());
+                    intent.putExtra("DEVICE_NAME", selectedDevice.getName());
+                    intent.putExtra("DEVICE_IP", selectedDevice.getIpAddress());
+                    intent.putExtra("DEVICE_STATUS", selectedDevice.isActive());
+                    startActivity(intent);
                 }
             }
         });
-
-        SwipeToDeleteHelper swipeHelper = new SwipeToDeleteHelper(listView) {
-            @Override
-            public void onSwipeLeft(int position) {
-                if (position >= 0 && position < devices.size()) {
-                    Device deviceToRemove = devices.get(position);
-                    confirmDeleteDevice(deviceToRemove, position);
-                }
-            }
-        };
 
         binding.getRoot().post(new Runnable() {
             @Override
@@ -89,6 +87,11 @@ public class HomeFragment extends Fragment {
         return root;
     }
 
+    @Override
+    public void onDeleteClick(Device device, int position) {
+        confirmDeleteDevice(device, position);
+    }
+
     private void clearDevicesPrefs() {
         if (getContext() != null) {
             SharedPreferences sharedPreferences = getContext().getSharedPreferences(PREFS_DEVICES, Context.MODE_PRIVATE);
@@ -99,49 +102,27 @@ public class HomeFragment extends Fragment {
     }
 
     private void addTestDevice() {
-        Device testDevice = new Device("1", "Dispozitiv Test", "192.168.1.1", true);
+        Device testDevice = new Device("1", "Test Device", "192.168.1.1", true);
         devices.add(testDevice);
         adapter.notifyDataSetChanged();
         saveDevicesList();
         updateVisibility();
     }
 
-    private void showDeviceDetails(Device device) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Detalii dispozitiv");
-
-        View detailView = LayoutInflater.from(getContext()).inflate(
-                android.R.layout.simple_list_item_2, null);
-
-        TextView titleView = detailView.findViewById(android.R.id.text1);
-        TextView detailsView = detailView.findViewById(android.R.id.text2);
-
-        titleView.setText(device.getName());
-
-        String details = "ID: " + device.getId() + "\n" +
-                "IP: " + device.getIpAddress() + "\n" +
-                "Status: " + (device.isActive() ? "Activ" : "Inactiv");
-
-        detailsView.setText(details);
-
-        builder.setView(detailView);
-        builder.setPositiveButton("OK", null);
-        builder.show();
-    }
-
     private void confirmDeleteDevice(final Device device, final int position) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Confirmare ștergere");
-        builder.setMessage("Ești sigur că vrei să ștergi dispozitivul " + device.getName() + "?");
+        builder.setTitle("Delete Confirmation");
+        builder.setMessage("Are you sure you want to delete the device " + device.getName() + "?");
 
-        builder.setPositiveButton("Da", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                String deviceId = device.getId();
                 deleteDevice(position);
             }
         });
 
-        builder.setNegativeButton("Nu", null);
+        builder.setNegativeButton("No", null);
         builder.show();
     }
 
@@ -151,7 +132,7 @@ public class HomeFragment extends Fragment {
             adapter.notifyDataSetChanged();
             saveDevicesList();
             updateVisibility();
-            Toast.makeText(getContext(), "Dispozitiv șters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Device deleted", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -159,7 +140,6 @@ public class HomeFragment extends Fragment {
         if (getContext() == null) {
             return;
         }
-
         try {
             SharedPreferences sharedPreferences = getContext().getSharedPreferences(PREFS_DEVICES, Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -167,8 +147,9 @@ public class HomeFragment extends Fragment {
             String json = gson.toJson(devices);
             editor.putString(KEY_DEVICES_LIST, json);
             editor.apply();
+
         } catch (Exception e) {
-            Toast.makeText(getContext(), "Eroare la salvare", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Error saving data", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -193,11 +174,9 @@ public class HomeFragment extends Fragment {
         if (getContext() == null) {
             return new ArrayList<>();
         }
-
         SharedPreferences sharedPreferences = getContext().getSharedPreferences(PREFS_DEVICES, Context.MODE_PRIVATE);
         Gson gson = new Gson();
         String json = sharedPreferences.getString(KEY_DEVICES_LIST, null);
-
         if (json == null) {
             return new ArrayList<>();
         } else {
