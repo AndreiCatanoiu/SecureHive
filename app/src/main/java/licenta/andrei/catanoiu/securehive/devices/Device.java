@@ -1,16 +1,22 @@
 package licenta.andrei.catanoiu.securehive.devices;
 
 public class Device {
+    public enum DeviceStatus {
+        ONLINE,
+        OFFLINE,
+        MAINTENANCE
+    }
+
     private String id;
     private String name;
-    private String ipAddress;
-    private boolean active;
+    private String lastAlert;
+    private DeviceStatus status;
 
-    public Device(String id, String name, String ipAddress, boolean active) {
+    public Device(String id, String name, String lastAlert, DeviceStatus status) {
         this.id = id;
         this.name = name;
-        this.ipAddress = ipAddress;
-        this.active = active;
+        this.lastAlert = lastAlert;
+        this.status = status;
     }
 
     public String getId() {
@@ -21,12 +27,20 @@ public class Device {
         return name;
     }
 
-    public String getIpAddress() {
-        return ipAddress;
+    public String getLastAlert() {
+        return lastAlert;
+    }
+
+    public DeviceStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(DeviceStatus status) {
+        this.status = status;
     }
 
     public boolean isActive() {
-        return active;
+        return status == DeviceStatus.ONLINE;
     }
 
     @Override

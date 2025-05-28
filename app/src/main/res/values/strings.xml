@@ -1,33 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SecureHive</string>
-    <string name="title_home">Home</string>
+    <string name="title_home">Acasă</string>
     <string name="title_alerts">Alerts</string>
-    <string name="title_account">Account</string>
+    <string name="title_account">Cont</string>
+    <string name="title_device_info">Detalii dispozitiv</string>
     <string name="list_is_empty">You currently have no devices associated with your account.</string>
     <string name="no_alerts">All good at the moment!</string>
-    <string name="edit_profile">Edit your profile</string>
+    <string name="edit_profile">Editează profilul</string>
     <string name="add_devices">Add a device to your account</string>
     <string name="editBtn">Edit</string>
     <string name="addDeviceBtn">Add</string>
     <string name="logOutBtn">Log Out</string>
     <string name="add_a_new_device">Add a new device</string>
     <string name="enter_id">Enter the device ID to connect it with the app.</string>
-    <string name="device_id">Device ID</string>
+    <string name="device_id">ID Dispozitiv</string>
     <string name="device_name_op">Device name (optional)</string>
     <string name="add_device_btn">Add device</string>
     <string name="device_id_null">Please enter your device ID.</string>
     <string name="device_added_successfully">Device added successfully!</string>
-    <string name="change_photo">Change photo</string>
+    <string name="change_photo">Schimbă fotografia</string>
     <string name="enter_name">Enter name</string>
     <string name="enter_email">Enter email</string>
     <string name="enter_phone_number">Enter phone number</string>
-    <string name="cancel">Cancel</string>
-    <string name="save">Save</string>
-    <string name="device_name">Device Name</string>
+    <string name="cancel">Anulează</string>
+    <string name="save">Salvează</string>
+    <string name="device_name">Nume dispozitiv</string>
     <string name="id">ID</string>
     <string name="ip_address">IP Address:</string>
-    <string name="status">Status:</string>
+    <string name="status">Status</string>
     <string name="latest_mqtt_message">Latest MQTT message:</string>
     <string name="loading">Loading...</string>
-    <string name="refresh">Refresh</string>
+    <string name="refresh">Reîmprospătare</string>
+    <string name="title_devices">Dispozitive</string>
+    <string name="logout">Deconectare</string>
 </resources>

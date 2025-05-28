@@ -18,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -31,7 +32,10 @@ import java.util.regex.Pattern;
 import de.hdodenhof.circleimageview.CircleImageView;
 import licenta.andrei.catanoiu.securehive.R;
 import licenta.andrei.catanoiu.securehive.databinding.FragmentAccountBinding;
-import licenta.andrei.catanoiu.securehive.activityes.AddDeviceActivity;
+import licenta.andrei.catanoiu.securehive.activities.AddDeviceActivity;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import licenta.andrei.catanoiu.securehive.activities.LoginActivity;
 
 public class AccountFragment extends Fragment {
 
@@ -42,6 +46,8 @@ public class AccountFragment extends Fragment {
     private Uri tempImageUri;
     private AlertDialog currentDialog;
     private CircleImageView dialogProfileImage;
+    private Button buttonLogout;
+    private FirebaseAuth mAuth;
 
     private static final String KEY_NAME = "user_name";
     private static final String KEY_EMAIL = "user_email";
@@ -49,6 +55,9 @@ public class AccountFragment extends Fragment {
     private static final String KEY_PROFILE_IMAGE = "user_profile_image";
 
     private static final String TAG = "AccountFragment";
+
+    private TextView userName, userEmail, userPhone;
+    private Button buttonEditProfile, buttonChangePassword;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -58,18 +67,30 @@ public class AccountFragment extends Fragment {
             View root = binding.getRoot();
 
             sharedPreferences = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            mAuth = FirebaseAuth.getInstance();
 
             loadUserProfile();
 
-            binding.buttonEditProfile.setOnClickListener(v -> showEditProfileDialog());
-            binding.buttonAddDevices.setOnClickListener(v -> {
-                Intent intent = new Intent(getActivity(), AddDeviceActivity.class);
-                startActivity(intent);
-            });
+            // Inițializare views
+            userName = root.findViewById(R.id.userName);
+            userEmail = root.findViewById(R.id.userEmail);
+            userPhone = root.findViewById(R.id.userPhone);
+            buttonEditProfile = root.findViewById(R.id.buttonEditProfile);
+            buttonChangePassword = root.findViewById(R.id.buttonChangePassword);
+            buttonLogout = root.findViewById(R.id.buttonLogout);
 
-            binding.buttonLogout.setOnClickListener(v -> {
-                Toast.makeText(getContext(), "Logging out...", Toast.LENGTH_SHORT).show();
-            });
+            // Setare date utilizator
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user != null) {
+                userName.setText(user.getDisplayName());
+                userEmail.setText(user.getEmail());
+                // Telefonul va fi setat din Firestore
+            }
+
+            // Setare click listeners
+            buttonEditProfile.setOnClickListener(v -> showEditProfileDialog());
+            buttonChangePassword.setOnClickListener(v -> showChangePasswordDialog());
+            buttonLogout.setOnClickListener(v -> logout());
 
             return root;
         } catch (Exception e) {
@@ -86,9 +107,9 @@ public class AccountFragment extends Fragment {
             String phone = sharedPreferences.getString(KEY_PHONE, "+40 712 345 678");
             String profileImageString = sharedPreferences.getString(KEY_PROFILE_IMAGE, "");
 
-            binding.textName.setText(name);
-            binding.textEmail.setText(email);
-            binding.textPhone.setText(phone);
+            userName.setText(name);
+            userEmail.setText(email);
+            userPhone.setText(phone);
 
             if (!profileImageString.isEmpty()) {
                 try {
@@ -120,9 +141,9 @@ public class AccountFragment extends Fragment {
             Button buttonSave = dialogView.findViewById(R.id.buttonSaveProfile);
             dialogProfileImage = dialogView.findViewById(R.id.editProfileImage);
 
-            editName.setText(binding.textName.getText());
-            editEmail.setText(binding.textEmail.getText());
-            editPhone.setText(binding.textPhone.getText());
+            editName.setText(userName.getText());
+            editEmail.setText(userEmail.getText());
+            editPhone.setText(userPhone.getText());
 
             dialogProfileImage.setImageDrawable(binding.profileImage.getDrawable());
 
@@ -168,15 +189,15 @@ public class AccountFragment extends Fragment {
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     if (!newName.isEmpty()) {
                         editor.putString(KEY_NAME, newName);
-                        binding.textName.setText(newName);
+                        userName.setText(newName);
                     }
                     if (!newEmail.isEmpty()) {
                         editor.putString(KEY_EMAIL, newEmail);
-                        binding.textEmail.setText(newEmail);
+                        userEmail.setText(newEmail);
                     }
                     if (!newPhone.isEmpty()) {
                         editor.putString(KEY_PHONE, newPhone);
-                        binding.textPhone.setText(newPhone);
+                        userPhone.setText(newPhone);
                     }
 
                     binding.profileImage.setImageDrawable(dialogProfileImage.getDrawable());
@@ -195,6 +216,10 @@ public class AccountFragment extends Fragment {
             Log.e(TAG, "Error displaying dialog", e);
             Toast.makeText(getContext(), "Error displaying dialog: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void showChangePasswordDialog() {
+        // TODO: Implementare dialog schimbare parolă
     }
 
     private void validateInputs(EditText nameField, EditText emailField, EditText phoneField, Button saveButton) {
@@ -291,6 +316,47 @@ public class AccountFragment extends Fragment {
 
         if (currentDialog != null && currentDialog.isShowing()) {
             currentDialog.dismiss();
+        }
+    }
+
+    private void logout() {
+        // Afișăm un dialog de confirmare
+        new AlertDialog.Builder(requireContext())
+            .setTitle("Deconectare")
+            .setMessage("Sigur doriți să vă deconectați?")
+            .setPositiveButton("Da", (dialog, which) -> {
+                // Ștergem datele locale
+                clearLocalData();
+                
+                // Deconectare Firebase
+                mAuth.signOut();
+                
+                // Redirectare către LoginActivity
+                Intent intent = new Intent(getActivity(), LoginActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(intent);
+                requireActivity().finish();
+            })
+            .setNegativeButton("Nu", null)
+            .show();
+    }
+
+    private void clearLocalData() {
+        try {
+            // Ștergem datele din SharedPreferences
+            Context context = requireContext();
+            
+            // Ștergem datele profilului
+            SharedPreferences profilePrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            profilePrefs.edit().clear().apply();
+            
+            // Ștergem lista de dispozitive
+            SharedPreferences devicesPrefs = context.getSharedPreferences("DevicesPrefs", Context.MODE_PRIVATE);
+            devicesPrefs.edit().clear().apply();
+            
+            Log.d(TAG, "Local data cleared successfully");
+        } catch (Exception e) {
+            Log.e(TAG, "Error clearing local data", e);
         }
     }
 }
