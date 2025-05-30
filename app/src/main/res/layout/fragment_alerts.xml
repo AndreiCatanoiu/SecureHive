@@ -25,6 +25,7 @@
         android:text="@string/no_alerts"
         android:textSize="20sp"
         android:gravity="center"
+        android:textColor="@color/text_secondary"
         android:textAlignment="center"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"

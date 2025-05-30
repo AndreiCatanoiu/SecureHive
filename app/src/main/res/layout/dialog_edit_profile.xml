@@ -5,35 +5,18 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <de.hdodenhof.circleimageview.CircleImageView
-        android:id="@+id/editProfileImage"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:layout_gravity="center"
-        android:src="@drawable/basic_user" />
-
-    <Button
-        android:id="@+id/buttonChangePhoto"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Schimbă fotografia"
-        android:layout_gravity="center"
-        style="@style/Widget.SecureHive.Button.Secondary"
-        android:layout_marginTop="8dp" />
-
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         style="@style/Widget.SecureHive.TextInputLayout">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Nume"
-            android:inputType="textPersonName"
-            android:padding="16dp" />
+            android:hint="@string/enter_name"
+            android:inputType="textPersonName" />
+
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
@@ -42,53 +25,13 @@
         android:layout_marginTop="8dp"
         style="@style/Widget.SecureHive.TextInputLayout">
 
-        <EditText
-            android:id="@+id/editEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Email"
-            android:inputType="textEmailAddress"
-            android:padding="16dp" />
-    </com.google.android.material.textfield.TextInputLayout>
-
-    <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        style="@style/Widget.SecureHive.TextInputLayout">
-
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/editPhone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Telefon"
-            android:inputType="phone"
-            android:padding="16dp" />
+            android:hint="@string/enter_phone_number"
+            android:inputType="phone" />
+
     </com.google.android.material.textfield.TextInputLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="24dp">
-
-        <Button
-            android:id="@+id/buttonCancel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Anulează"
-            style="@style/Widget.SecureHive.Button.Secondary"
-            android:layout_marginEnd="8dp" />
-
-        <Button
-            android:id="@+id/buttonSaveProfile"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Salvează"
-            style="@style/Widget.SecureHive.Button"
-            android:layout_marginStart="8dp" />
-    </LinearLayout>
 
 </LinearLayout>

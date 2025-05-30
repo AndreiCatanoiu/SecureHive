@@ -13,7 +13,7 @@
     <fragment
         android:id="@+id/navigation_devices"
         android:name="licenta.andrei.catanoiu.securehive.fragments.devices.DevicesFragment"
-        android:label="@string/title_devices">
+        android:label="@string/add_devices">
         <action
             android:id="@+id/action_devices_to_device_info"
             app:destination="@id/navigation_device_info" />
@@ -28,7 +28,7 @@
     <activity
         android:id="@+id/navigation_device_info"
         android:name="licenta.andrei.catanoiu.securehive.activities.DeviceInfoActivity"
-        android:label="@string/title_device_info">
+        android:label="@string/device_name">
         <argument
             android:name="deviceId"
             app:argType="string" />

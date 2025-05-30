@@ -1,71 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:background="@color/primary_dark"
     android:padding="16dp">
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Adaugă dispozitiv nou"
+        android:text="Change Email"
+        android:textColor="@color/text_primary"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:textColor="@color/text_primary"
         android:layout_marginBottom="16dp"/>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         style="@style/Widget.SecureHive.TextInputLayout">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/deviceIdInput"
+            android:id="@+id/newEmailInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/device_id"
-            android:inputType="text" />
-
+            android:hint="New Email Address"
+            android:inputType="textEmailAddress"
+            android:maxLines="1"
+            android:textColor="@color/text_primary" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        style="@style/Widget.SecureHive.TextInputLayout">
+        style="@style/Widget.SecureHive.TextInputLayout"
+        android:layout_marginBottom="24dp"
+        app:passwordToggleEnabled="true"
+        app:passwordToggleTint="@color/accent">
 
         <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/deviceNameInput"
+            android:id="@+id/passwordInput"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/device_name_op"
-            android:inputType="text" />
-
+            android:hint="Current Password"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:textColor="@color/text_primary" />
     </com.google.android.material.textfield.TextInputLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="24dp">
+        android:gravity="end">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/buttonCancel"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Anulează"
-            style="@style/Widget.SecureHive.Button.Secondary"
-            android:layout_marginEnd="8dp" />
+            android:layout_marginEnd="8dp"
+            android:text="Cancel"
+            style="@style/Widget.SecureHive.Button.Secondary"/>
 
-        <Button
-            android:id="@+id/buttonAdd"
-            android:layout_width="0dp"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/buttonSave"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Adaugă"
-            style="@style/Widget.SecureHive.Button"
-            android:layout_marginStart="8dp" />
+            android:text="Save"
+            style="@style/Widget.SecureHive.Button"/>
     </LinearLayout>
-
 </LinearLayout> 

@@ -12,11 +12,22 @@ public class Device {
     private String lastAlert;
     private DeviceStatus status;
 
+    public Device() {
+        // Constructor gol necesar pentru Firebase
+    }
+
     public Device(String id, String name, String lastAlert, DeviceStatus status) {
         this.id = id;
         this.name = name;
         this.lastAlert = lastAlert;
         this.status = status;
+    }
+
+    public Device(String id, String name) {
+        this.id = id;
+        this.name = name;
+        this.status = DeviceStatus.OFFLINE;  // Status implicit
+        this.lastAlert = "";
     }
 
     public String getId() {

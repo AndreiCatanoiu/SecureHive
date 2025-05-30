@@ -1,11 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Culori principale bazate pe logo -->
-    <color name="primary">#FFD700</color>         <!-- Auriu pentru elementele principale -->
+    <!-- Brand colors -->
+    <color name="primary">#FBC02D</color>         <!-- Auriu pentru elementele principale -->
     <color name="primary_dark">#1A237E</color>    <!-- Albastru foarte închis pentru bara de stare -->
     <color name="primary_variant">#FFE57F</color> <!-- Auriu deschis pentru accente -->
-    
+
+    <!-- Base colors -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="error">#F44336</color>          <!-- Roșu pentru erori -->
+
+    <!-- Background colors -->
+    <color name="background">#0C233A</color>      <!-- Albastru foarte închis pentru fundal -->
+    <color name="surface">#102037</color>         <!-- Albastru închis pentru suprafețe -->
+    <!-- Albastru foarte închis pentru fundal -->
+    <color name="accent_dark">#010F1F</color>
+
+    <!-- Text colors -->
+    <color name="text_primary">#FFFFFF</color>    <!-- Alb pentru text pe fundal închis -->
+    <color name="text_secondary">#B0BEC5</color>  <!-- Gri deschis pentru text secundar -->
+
     <!-- Culori secundare -->
     <color name="secondary">#0D47A1</color>       <!-- Albastru închis pentru elemente secundare -->
     <color name="secondary_dark">#002171</color>  <!-- Albastru și mai închis pentru contrast -->
@@ -14,14 +29,7 @@
     <!-- Culori de accent și stare -->
     <color name="accent">#FFD700</color>          <!-- Auriu pentru evidențiere -->
     <color name="success">#4CAF50</color>         <!-- Verde pentru stări pozitive -->
-    <color name="error">#F44336</color>          <!-- Roșu pentru erori -->
     <color name="warning">#FF9800</color>        <!-- Portocaliu pentru avertizări -->
-
-    <!-- Culori pentru text și fundal -->
-    <color name="text_primary">#FFFFFF</color>    <!-- Alb pentru text pe fundal închis -->
-    <color name="text_secondary">#B0BEC5</color>  <!-- Gri deschis pentru text secundar -->
-    <color name="background">#0A1929</color>      <!-- Albastru foarte închis pentru fundal -->
-    <color name="surface">#102037</color>         <!-- Albastru închis pentru suprafețe -->
 
     <!-- Culori pentru stări -->
     <color name="online">#4CAF50</color>          <!-- Verde pentru dispozitive online -->
@@ -29,13 +37,13 @@
     <color name="maintenance">#FF9800</color>     <!-- Portocaliu pentru mentenanță -->
 
     <!-- Culori pentru butoane -->
-    <color name="button_primary">@color/primary</color>
+    <color name="button_primary">@color/accent</color>
     <color name="button_secondary">@color/secondary</color>
     <color name="button_disabled">#757575</color>
 
     <!-- Culori pentru carduri -->
-    <color name="card_background">#102037</color>
-    <color name="card_stroke">#FFD700</color>     <!-- Margine aurie pentru carduri -->
+    <color name="card_background">@color/surface</color>
+    <color name="card_stroke">@color/accent</color>
 
     <!-- Culori pentru ripple -->
     <color name="ripple">#33FFD700</color>        <!-- Efect de ripple auriu transparent -->

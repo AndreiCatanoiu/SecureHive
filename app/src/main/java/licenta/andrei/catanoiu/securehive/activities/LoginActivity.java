@@ -2,28 +2,25 @@ package licenta.andrei.catanoiu.securehive.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import licenta.andrei.catanoiu.securehive.R;
 
 public class LoginActivity extends AppCompatActivity {
-    private static final String TAG = "LoginActivity";
-    
-    private EditText emailEditText;
-    private EditText passwordEditText;
-    private Button loginButton;
-    private Button registerButton;
-    private ProgressBar progressBar;
+
+    private TextInputEditText emailInput;
+    private TextInputEditText passwordInput;
+    private TextView errorText;
     private FirebaseAuth mAuth;
 
     @Override
@@ -31,118 +28,106 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Inițializare Firebase Auth
         mAuth = FirebaseAuth.getInstance();
 
-        // Inițializare views
-        emailEditText = findViewById(R.id.editTextEmail);
-        passwordEditText = findViewById(R.id.editTextPassword);
-        loginButton = findViewById(R.id.buttonLogin);
-        registerButton = findViewById(R.id.buttonRegister);
-        progressBar = findViewById(R.id.progressBar);
+        emailInput = findViewById(R.id.emailInput);
+        passwordInput = findViewById(R.id.passwordInput);
+        MaterialButton loginButton = findViewById(R.id.loginButton);
+        TextView forgotPasswordText = findViewById(R.id.forgotPasswordText);
+        TextView registerPrompt = findViewById(R.id.registerPrompt);
+        errorText = findViewById(R.id.errorText);
 
-        loginButton.setOnClickListener(v -> loginUser());
-        registerButton.setOnClickListener(v -> registerUser());
+        loginButton.setOnClickListener(v -> attemptLogin());
+        forgotPasswordText.setOnClickListener(v -> handleForgotPassword());
+        registerPrompt.setOnClickListener(v -> startActivity(new Intent(this, RegisterActivity.class)));
     }
 
     @Override
-    public void onStart() {
+    protected void onStart() {
         super.onStart();
-        // Verifică dacă utilizatorul este deja autentificat
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser != null) {
-            startMainActivity();
+        if (currentUser != null && currentUser.isEmailVerified()) {
+            startActivity(new Intent(this, MainActivity.class));
+            finish();
+        } else if (currentUser != null) {
+            mAuth.signOut();
         }
     }
 
-    private void loginUser() {
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
+    private void attemptLogin() {
+        String email = emailInput.getText().toString().trim();
+        String password = passwordInput.getText().toString().trim();
 
-        if (email.isEmpty()) {
-            emailEditText.setError("Email-ul este necesar");
-            emailEditText.requestFocus();
+        if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showError("Please enter a valid email address");
             return;
         }
 
-        if (password.isEmpty()) {
-            passwordEditText.setError("Parola este necesară");
-            passwordEditText.requestFocus();
+        if (password.isEmpty() || password.length() < 6) {
+            showError("Password must be at least 6 characters");
             return;
         }
 
-        showProgressBar();
+        hideError();
 
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
-                    hideProgressBar();
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "signInWithEmail:success");
-                        startMainActivity();
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            if (user.isEmailVerified()) {
+                                startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                finish();
+                            } else {
+                                showError("Please verify your email address first");
+                                mAuth.signOut();
+                            }
+                        }
                     } else {
-                        Log.w(TAG, "signInWithEmail:failure", task.getException());
-                        Toast.makeText(LoginActivity.this, "Autentificare eșuată: " + 
-                            task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        showError("Invalid email or password");
                     }
                 });
     }
 
-    private void registerUser() {
-        String email = emailEditText.getText().toString().trim();
-        String password = passwordEditText.getText().toString().trim();
-
-        if (email.isEmpty()) {
-            emailEditText.setError("Email-ul este necesar");
-            emailEditText.requestFocus();
+    private void handleForgotPassword() {
+        String email = emailInput.getText().toString().trim();
+        
+        if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            showError("Please enter your email address");
             return;
         }
 
-        if (password.isEmpty()) {
-            passwordEditText.setError("Parola este necesară");
-            passwordEditText.requestFocus();
-            return;
-        }
+        hideError();
 
-        if (password.length() < 6) {
-            passwordEditText.setError("Parola trebuie să aibă minim 6 caractere");
-            passwordEditText.requestFocus();
-            return;
-        }
-
-        showProgressBar();
-
-        mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    hideProgressBar();
+        mAuth.fetchSignInMethodsForEmail(email)
+                .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "createUserWithEmail:success");
-                        Toast.makeText(LoginActivity.this, "Cont creat cu succes!", 
-                            Toast.LENGTH_SHORT).show();
-                        startMainActivity();
+                        if (task.getResult().getSignInMethods().isEmpty()) {
+                            showError("No account exists with this email address");
+                        } else {
+                            mAuth.sendPasswordResetEmail(email)
+                                    .addOnCompleteListener(resetTask -> {
+                                        if (resetTask.isSuccessful()) {
+                                            Toast.makeText(LoginActivity.this,
+                                                    "Password reset email sent",
+                                                    Toast.LENGTH_LONG).show();
+                                        } else {
+                                            showError("Failed to send reset email");
+                                        }
+                                    });
+                        }
                     } else {
-                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        Toast.makeText(LoginActivity.this, "Înregistrare eșuată: " + 
-                            task.getException().getMessage(), Toast.LENGTH_LONG).show();
+                        showError("Failed to check email address");
                     }
                 });
     }
 
-    private void startMainActivity() {
-        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
-        finish();
+    private void showError(String message) {
+        errorText.setText(message);
+        errorText.setVisibility(View.VISIBLE);
     }
 
-    private void showProgressBar() {
-        progressBar.setVisibility(View.VISIBLE);
-        loginButton.setEnabled(false);
-        registerButton.setEnabled(false);
-    }
-
-    private void hideProgressBar() {
-        progressBar.setVisibility(View.GONE);
-        loginButton.setEnabled(true);
-        registerButton.setEnabled(true);
+    private void hideError() {
+        errorText.setVisibility(View.GONE);
     }
 } 

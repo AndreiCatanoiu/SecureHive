@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SecureHive</string>
-    <string name="title_home">Acasă</string>
+
+    <string name="title_home">Home</string>
     <string name="title_alerts">Alerts</string>
-    <string name="title_account">Cont</string>
-    <string name="title_device_info">Detalii dispozitiv</string>
-    <string name="list_is_empty">You currently have no devices associated with your account.</string>
+    <string name="title_account">Account</string>
+
     <string name="no_alerts">All good at the moment!</string>
-    <string name="edit_profile">Editează profilul</string>
+    <string name="no_devices">There are no devices in your account.</string>
+
+    <string name="edit_profile">Edit your profile</string>
     <string name="add_devices">Add a device to your account</string>
     <string name="editBtn">Edit</string>
     <string name="addDeviceBtn">Add</string>
@@ -23,15 +25,30 @@
     <string name="enter_name">Enter name</string>
     <string name="enter_email">Enter email</string>
     <string name="enter_phone_number">Enter phone number</string>
-    <string name="cancel">Anulează</string>
-    <string name="save">Salvează</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
     <string name="device_name">Nume dispozitiv</string>
     <string name="id">ID</string>
-    <string name="ip_address">IP Address:</string>
     <string name="status">Status</string>
-    <string name="latest_mqtt_message">Latest MQTT message:</string>
-    <string name="loading">Loading...</string>
-    <string name="refresh">Reîmprospătare</string>
-    <string name="title_devices">Dispozitive</string>
-    <string name="logout">Deconectare</string>
+    <string name="logout">Logout</string>
+    <string name="welcome_to_app">Welcome to SecureHive</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="loginBtn">Login</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="don_t_have_an_account_register">Don\'t have an account? Register</string>
+    <string name="create_account">Create an account</string>
+    <string name="name">Name</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="password_min_chars">Password (min. 6 characters)</string>
+    <string name="register">Register</string>
+    <string name="already_have_an_account_login">Already have an account? Login</string>
+    <string name="Email_address_change">Change the email address for your account</string>
+    <string name="settings">Settings</string>
+    <string name="username">Username</string>
+    <string name="email_example">email@example.com</string>
+    <string name="phone_no_example">+40755555555</string>
+    <string name="add_a_device">Add a device to your account</string>
+    <string name="device_summary">Devices summary\n</string>
+    <string name="phone_number">Romanian phone number\n</string>
 </resources>

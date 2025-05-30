@@ -5,11 +5,11 @@
         <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_dark</item>
-        <item name="colorOnPrimary">@color/background</item>
+        <item name="colorOnPrimary">@color/white</item>
         <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/secondary</item>
-        <item name="colorSecondaryVariant">@color/secondary_dark</item>
-        <item name="colorOnSecondary">@color/background</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondaryVariant">@color/accent_dark</item>
+        <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">@color/primary_dark</item>
         <item name="android:navigationBarColor">@color/primary_dark</item>
@@ -21,6 +21,14 @@
         <item name="colorOnSurface">@color/text_primary</item>
         <item name="materialCardViewStyle">@style/Widget.SecureHive.CardView</item>
         <item name="materialButtonStyle">@style/Widget.SecureHive.Button</item>
+    </style>
+
+    <!-- Theme without ActionBar -->
+    <style name="Theme.SecureHive.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowContentOverlay">@null</item>
     </style>
 
     <!-- Stil personalizat pentru butoane -->
@@ -56,5 +64,28 @@
     <style name="Widget.SecureHive.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="boxStrokeColor">@color/primary</item>
         <item name="hintTextColor">@color/primary</item>
+    </style>
+
+    <!-- Stil pentru AlertDialog -->
+    <style name="CustomAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSecondary">@color/accent</item>
+        <item name="android:background">@color/surface</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="buttonBarPositiveButtonStyle">@style/Widget.SecureHive.Button</item>
+        <item name="buttonBarNegativeButtonStyle">@style/Widget.SecureHive.Button.Secondary</item>
+        <item name="materialAlertDialogTitleTextStyle">@style/CustomAlertDialog.Title</item>
+        <item name="materialAlertDialogBodyTextStyle">@style/CustomAlertDialog.Body</item>
+    </style>
+
+    <style name="CustomAlertDialog.Title" parent="MaterialAlertDialog.MaterialComponents.Title.Text">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="CustomAlertDialog.Body" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textSize">16sp</item>
     </style>
 </resources>
