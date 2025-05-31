@@ -16,12 +16,11 @@
     <string name="logOutBtn">Log Out</string>
     <string name="add_a_new_device">Add a new device</string>
     <string name="enter_id">Enter the device ID to connect it with the app.</string>
-    <string name="device_id">ID Dispozitiv</string>
+    <string name="device_id">Device ID</string>
     <string name="device_name_op">Device name (optional)</string>
     <string name="add_device_btn">Add device</string>
     <string name="device_id_null">Please enter your device ID.</string>
     <string name="device_added_successfully">Device added successfully!</string>
-    <string name="change_photo">Schimbă fotografia</string>
     <string name="enter_name">Enter name</string>
     <string name="enter_email">Enter email</string>
     <string name="enter_phone_number">Enter phone number</string>
@@ -49,6 +48,6 @@
     <string name="email_example">email@example.com</string>
     <string name="phone_no_example">+40755555555</string>
     <string name="add_a_device">Add a device to your account</string>
-    <string name="device_summary">Devices summary\n</string>
-    <string name="phone_number">Romanian phone number\n</string>
+    <string name="device_summary">Devices summary</string>
+    <string name="phone_number">Phone number</string>
 </resources>

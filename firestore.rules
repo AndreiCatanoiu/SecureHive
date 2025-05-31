@@ -1,0 +1,15 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Funcție helper pentru a verifica dacă utilizatorul este autentificat
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Reguli pentru toate colecțiile
+    match /{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+} 

@@ -50,12 +50,14 @@ dependencies {
     // Import the BoM for the Firebase platform
     implementation platform('com.google.firebase:firebase-bom:32.7.4')
 
-    // Add the dependencies for the desired Firebase products
+    // Add the dependencies for Firebase products
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.firebase:firebase-storage'
     
-    // Add the Google Services Gradle plugin
+    // Google Play Services
     implementation 'com.google.android.gms:play-services-base:18.3.0'
+    implementation 'com.google.android.gms:play-services-auth:21.0.0'
+    implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
 }

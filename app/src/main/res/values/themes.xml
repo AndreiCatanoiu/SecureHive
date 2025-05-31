@@ -29,6 +29,7 @@
         <item name="windowNoTitle">true</item>
         <item name="android:windowFullscreen">false</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="toolbarStyle">@style/Widget.SecureHive.Toolbar</item>
     </style>
 
     <!-- Stil personalizat pentru butoane -->
@@ -87,5 +88,12 @@
     <style name="CustomAlertDialog.Body" parent="MaterialAlertDialog.MaterialComponents.Body.Text">
         <item name="android:textColor">@color/text_secondary</item>
         <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- Stil pentru Toolbar -->
+    <style name="Widget.SecureHive.Toolbar" parent="Widget.MaterialComponents.Toolbar">
+        <item name="android:background">@color/primary</item>
+        <item name="titleTextColor">@color/white</item>
+        <item name="navigationIconTint">@color/white</item>
     </style>
 </resources>

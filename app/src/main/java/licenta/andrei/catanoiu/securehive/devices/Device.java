@@ -1,5 +1,7 @@
 package licenta.andrei.catanoiu.securehive.devices;
 
+import com.google.firebase.Timestamp;
+
 public class Device {
     public enum DeviceStatus {
         ONLINE,
@@ -8,38 +10,21 @@ public class Device {
     }
 
     private String id;
-    private String name;
-    private String lastAlert;
     private DeviceStatus status;
+    private Timestamp lastUpdated;
 
     public Device() {
         // Constructor gol necesar pentru Firebase
     }
 
-    public Device(String id, String name, String lastAlert, DeviceStatus status) {
+    public Device(String id) {
         this.id = id;
-        this.name = name;
-        this.lastAlert = lastAlert;
-        this.status = status;
-    }
-
-    public Device(String id, String name) {
-        this.id = id;
-        this.name = name;
-        this.status = DeviceStatus.OFFLINE;  // Status implicit
-        this.lastAlert = "";
+        this.status = DeviceStatus.OFFLINE;
+        this.lastUpdated = Timestamp.now();
     }
 
     public String getId() {
         return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getLastAlert() {
-        return lastAlert;
     }
 
     public DeviceStatus getStatus() {
@@ -48,14 +33,14 @@ public class Device {
 
     public void setStatus(DeviceStatus status) {
         this.status = status;
+        this.lastUpdated = Timestamp.now();
+    }
+
+    public Timestamp getLastUpdated() {
+        return lastUpdated;
     }
 
     public boolean isActive() {
         return status == DeviceStatus.ONLINE;
-    }
-
-    @Override
-    public String toString() {
-        return name;
     }
 }

@@ -5,29 +5,42 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import licenta.andrei.catanoiu.securehive.R;
+import licenta.andrei.catanoiu.securehive.utils.DeviceIdDecoder;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder> {
 
-    private ArrayList<Device> devices;
+    private static final String TAG = "DeviceAdapter";
+    private final ArrayList<UserDevice> userDevices;
+    private final Map<String, Device> deviceStatuses;
     private final Context context;
     private final DeviceAdapterListener listener;
+    private final FirebaseFirestore db;
 
     public interface DeviceAdapterListener {
-        void onDeleteClick(Device device, int position);
+        void onDeleteClick(UserDevice userDevice, int position);
+        void onDeviceStatusError(String deviceId, String error);
     }
 
-    public DeviceAdapter(Context context, ArrayList<Device> devices, DeviceAdapterListener listener) {
+    public DeviceAdapter(Context context, ArrayList<UserDevice> userDevices, DeviceAdapterListener listener) {
         this.context = context;
-        this.devices = devices;
+        this.userDevices = userDevices;
+        this.deviceStatuses = new HashMap<>();
         this.listener = listener;
+        this.db = FirebaseFirestore.getInstance();
     }
 
     @NonNull
@@ -39,10 +52,65 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Device device = devices.get(position);
-        holder.deviceName.setText(device.getName());
+        UserDevice userDevice = userDevices.get(position);
+        holder.deviceName.setText(userDevice.getCustomName());
         
-        // Setare status și culoare
+        // Setăm imaginea corectă în funcție de tipul dispozitivului
+        DeviceIdDecoder.DeviceType deviceType = DeviceIdDecoder.getDeviceType(userDevice.getDeviceId());
+        switch (deviceType) {
+            case PIR:
+                holder.deviceIcon.setImageResource(R.drawable.senzorpir);
+                break;
+            case GAS:
+                holder.deviceIcon.setImageResource(R.drawable.senzorgaz);
+                break;
+            default:
+                holder.deviceIcon.setImageResource(R.drawable.ic_device);
+                break;
+        }
+        
+        // Încărcăm statusul device-ului din Firestore dacă nu îl avem deja
+        if (!deviceStatuses.containsKey(userDevice.getDeviceId())) {
+            holder.deviceStatus.setText("Loading...");
+            holder.deviceStatus.setTextColor(context.getColor(R.color.text_secondary));
+            
+            loadDeviceStatus(userDevice.getDeviceId(), holder);
+        } else {
+            updateDeviceStatusUI(holder, deviceStatuses.get(userDevice.getDeviceId()));
+        }
+
+        // Click listener pentru butonul de ștergere
+        holder.deleteButton.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onDeleteClick(userDevice, holder.getAdapterPosition());
+            }
+        });
+    }
+
+    private void loadDeviceStatus(String deviceId, ViewHolder holder) {
+        db.collection("devices").document(deviceId)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    Device device = documentSnapshot.toObject(Device.class);
+                    if (device != null) {
+                        deviceStatuses.put(deviceId, device);
+                        updateDeviceStatusUI(holder, device);
+                    } else {
+                        if (listener != null) {
+                            listener.onDeviceStatusError(deviceId, "Device not found");
+                        }
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    if (listener != null) {
+                        listener.onDeviceStatusError(deviceId, e.getMessage());
+                    }
+                });
+    }
+
+    private void updateDeviceStatusUI(ViewHolder holder, Device device) {
+        if (device == null) return;
+
         Device.DeviceStatus status = device.getStatus();
         String statusText;
         int statusColor;
@@ -68,35 +136,40 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         
         holder.deviceStatus.setText(statusText);
         holder.deviceStatus.setTextColor(statusColor);
-
-        // Click listener pentru butonul de ștergere
-        holder.deleteButton.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onDeleteClick(device, holder.getAdapterPosition());
-            }
-        });
     }
 
     @Override
     public int getItemCount() {
-        return devices != null ? devices.size() : 0;
+        return userDevices != null ? userDevices.size() : 0;
     }
 
-    public void updateDevices(ArrayList<Device> newDevices) {
-        this.devices = newDevices;
+    public void updateDevices(ArrayList<UserDevice> newUserDevices) {
+        this.userDevices.clear();
+        this.userDevices.addAll(newUserDevices);
+        this.deviceStatuses.clear(); // Resetăm cache-ul de statusuri
         notifyDataSetChanged();
+    }
+
+    public void updateDeviceStatus(String deviceId, Device.DeviceStatus newStatus) {
+        Device device = deviceStatuses.get(deviceId);
+        if (device != null) {
+            device.setStatus(newStatus);
+            notifyDataSetChanged();
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView deviceName;
         final TextView deviceStatus;
         final ImageButton deleteButton;
+        final ImageView deviceIcon;
 
         ViewHolder(View view) {
             super(view);
             deviceName = view.findViewById(R.id.deviceName);
             deviceStatus = view.findViewById(R.id.deviceStatus);
             deleteButton = view.findViewById(R.id.deleteButton);
+            deviceIcon = view.findViewById(R.id.deviceIcon);
         }
     }
 }

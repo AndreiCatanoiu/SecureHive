@@ -3,6 +3,7 @@ package licenta.andrei.catanoiu.securehive.fragments.account;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import licenta.andrei.catanoiu.securehive.R;
 import licenta.andrei.catanoiu.securehive.activities.AddDeviceActivity;
 import licenta.andrei.catanoiu.securehive.activities.LoginActivity;
@@ -23,9 +27,36 @@ import licenta.andrei.catanoiu.securehive.databinding.FragmentAccountBinding;
 
 public class AccountFragment extends Fragment {
 
+    private static final String TAG = "AccountFragment";
     private FragmentAccountBinding binding;
     private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    private String cachedName;
+    private String cachedPhone;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+        
+        // Preîncărcăm datele utilizatorului
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            db.collection("users").document(user.getUid())
+                    .get()
+                    .addOnSuccessListener(document -> {
+                        if (document.exists()) {
+                            cachedName = document.getString("name");
+                            cachedPhone = document.getString("phone");
+                            updateUIWithCachedData();
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Error loading user data", e);
+                    });
+        }
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -33,39 +64,35 @@ public class AccountFragment extends Fragment {
         binding = FragmentAccountBinding.inflate(inflater, container, false);
         View root = binding.getRoot();
 
-        mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
-
-        setupUserInfo();
+        setupInitialUI();
         setupButtons();
+        updateUIWithCachedData();
 
         return root;
     }
 
-    private void setupUserInfo() {
+    private void setupInitialUI() {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             binding.userEmail.setText(user.getEmail());
-            
-            db.collection("users").document(user.getUid())
-                    .get()
-                    .addOnSuccessListener(document -> {
-                        if (document.exists()) {
-                            String name = document.getString("name");
-                            String phone = document.getString("phone");
+            // Setăm datele din cache dacă există
+            if (cachedName != null) {
+                binding.userName.setText(cachedName);
+            }
+            if (cachedPhone != null) {
+                binding.userPhone.setText(cachedPhone);
+            }
+        }
+    }
 
-                            if (name != null && !name.isEmpty()) {
-                                binding.userName.setText(name);
-                            }
-                            if (phone != null && !phone.isEmpty()) {
-                                binding.userPhone.setText(phone);
-                            }
-                        }
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Error loading user data: " + e.getMessage(), 
-                                Toast.LENGTH_SHORT).show();
-                    });
+    private void updateUIWithCachedData() {
+        if (binding != null) {
+            if (cachedName != null && !cachedName.isEmpty()) {
+                binding.userName.setText(cachedName);
+            }
+            if (cachedPhone != null && !cachedPhone.isEmpty()) {
+                binding.userPhone.setText(cachedPhone);
+            }
         }
     }
 
@@ -73,11 +100,24 @@ public class AccountFragment extends Fragment {
         binding.editProfileButton.setOnClickListener(v -> showEditProfileDialog());
 
         binding.addDeviceButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), AddDeviceActivity.class);
-            startActivity(intent);
+            try {
+                Intent intent = new Intent(getActivity(), AddDeviceActivity.class);
+                startActivity(intent);
+            } catch (Exception e) {
+                Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
         });
 
         binding.logoutButton.setOnClickListener(v -> showLogoutDialog());
+    }
+
+    private boolean isValidRomanianPhoneNumber(String phone) {
+        // Eliminăm spațiile și caracterele speciale
+        String cleanPhone = phone.replaceAll("[\\s-]", "");
+        
+        // Verificăm formatul: +40/0 urmat de 7/2/3 și încă 8 cifre
+        return cleanPhone.matches("(\\+40|0)(2|3|7)[0-9]{8}");
     }
 
     private void showEditProfileDialog() {
@@ -91,29 +131,82 @@ public class AccountFragment extends Fragment {
         phoneInput.setText(binding.userPhone.getText());
         
         builder.setView(view)
-               .setPositiveButton(R.string.save, (dialog, which) -> {
-                    String newName = nameInput.getText().toString().trim();
-                    String newPhone = phoneInput.getText().toString().trim();
-                    updateProfile(newName, newPhone);
-               })
+               .setPositiveButton(R.string.save, null) // Setăm null pentru a preveni închiderea automată
                .setNegativeButton(R.string.cancel, null);
 
         AlertDialog dialog = builder.create();
         dialog.show();
+
+        // Setăm listener-ul pentru butonul de Save după ce dialogul este creat
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
+            String newName = nameInput.getText().toString().trim();
+            String newPhone = phoneInput.getText().toString().trim();
+
+            if (newName.isEmpty()) {
+                nameInput.setError("Please enter your name");
+                return;
+            }
+
+            if (newPhone.isEmpty()) {
+                phoneInput.setError("Please enter your phone number");
+                return;
+            }
+
+            if (!isValidRomanianPhoneNumber(newPhone)) {
+                phoneInput.setError("Please enter a valid Romanian phone number (e.g. +40722123456 or 0722123456)");
+                return;
+            }
+
+            updateProfile(newName, newPhone);
+            dialog.dismiss();
+        });
     }
 
     private void updateProfile(String newName, String newPhone) {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
+            String currentName = binding.userName.getText().toString().trim();
+            String currentPhone = binding.userPhone.getText().toString().trim();
+
+            boolean nameChanged = !currentName.equals(newName.trim());
+            boolean phoneChanged = !currentPhone.equals(newPhone.trim());
+
+            if (!nameChanged && !phoneChanged) {
+                Toast.makeText(getContext(), "No changes to save", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Map<String, Object> updates = new HashMap<>();
+            if (nameChanged) {
+                updates.put("name", newName.trim());
+            }
+            if (phoneChanged) {
+                updates.put("phone", newPhone.trim());
+            }
+
             db.collection("users").document(user.getUid())
-                    .update("name", newName, "phone", newPhone)
+                    .update(updates)
                     .addOnSuccessListener(aVoid -> {
-                        binding.userName.setText(newName);
-                        binding.userPhone.setText(newPhone);
-                        Toast.makeText(getContext(), "Profile updated successfully", Toast.LENGTH_SHORT).show();
+                        if (nameChanged) {
+                            binding.userName.setText(newName.trim());
+                        }
+                        if (phoneChanged) {
+                            binding.userPhone.setText(newPhone.trim());
+                        }
+
+                        String message = "Profile updated successfully";
+                        if (nameChanged && phoneChanged) {
+                            message = "Name and phone updated successfully";
+                        } else if (nameChanged) {
+                            message = "Name updated successfully";
+                        } else if (phoneChanged) {
+                            message = "Phone updated successfully";
+                        }
+
+                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Failed to update profile: " + e.getMessage(), 
+                        Toast.makeText(getContext(), "Failed to update profile: " + e.getMessage(),
                                 Toast.LENGTH_SHORT).show();
                     });
         }

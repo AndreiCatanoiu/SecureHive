@@ -58,6 +58,14 @@ public class RegisterActivity extends AppCompatActivity {
         loginPrompt.setOnClickListener(v -> finish());
     }
 
+    private boolean isValidRomanianPhoneNumber(String phone) {
+        // Eliminăm spațiile și caracterele speciale
+        String cleanPhone = phone.replaceAll("[\\s-]", "");
+        
+        // Verificăm formatul: +40/0 urmat de 7/2/3 și încă 8 cifre
+        return cleanPhone.matches("(\\+40|0)(2|3|7)[0-9]{8}");
+    }
+
     private void attemptRegister() {
         String name = nameInput.getText().toString().trim();
         String email = emailInput.getText().toString().trim();
@@ -78,6 +86,11 @@ public class RegisterActivity extends AppCompatActivity {
 
         if (phone.isEmpty()) {
             showError("Please enter your phone number");
+            return;
+        }
+
+        if (!isValidRomanianPhoneNumber(phone)) {
+            showError("Please enter a valid Romanian phone number (e.g. +40722123456 or 0722123456)");
             return;
         }
 
