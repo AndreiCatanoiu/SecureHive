@@ -21,7 +21,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/surface"
-        app:itemIconTint="@color/primary"
+        app:itemIconTint="@color/bottom_nav_icon_selector"
         app:itemTextColor="@color/primary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"

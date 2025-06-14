@@ -11,6 +11,7 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import licenta.andrei.catanoiu.securehive.R;
+import licenta.andrei.catanoiu.securehive.utils.NotificationService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +21,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Initialize notification service
+        NotificationService.createNotificationChannel(this);
 
         // Găsim NavHostFragment și obținem NavController
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
@@ -37,8 +41,20 @@ public class MainActivity extends AppCompatActivity {
                 .build();
 
         // Setăm navigarea
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
+
+        // Handle fragment navigation from notifications
+        String targetFragment = getIntent().getStringExtra("fragment");
+        if (targetFragment != null) {
+            switch (targetFragment) {
+                case "alerts":
+                    navController.navigate(R.id.navigation_alerts);
+                    break;
+                case "devices":
+                    navController.navigate(R.id.navigation_home);
+                    break;
+            }
+        }
     }
 
     @Override

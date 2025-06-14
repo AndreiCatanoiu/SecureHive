@@ -32,11 +32,6 @@ public class AddDeviceActivity extends AppCompatActivity {
         binding = ActivityAddDeviceBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        setSupportActionBar(binding.toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle(R.string.add_a_new_device);
-        }
-
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
 

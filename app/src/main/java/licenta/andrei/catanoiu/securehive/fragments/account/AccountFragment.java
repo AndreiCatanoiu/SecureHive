@@ -110,6 +110,8 @@ public class AccountFragment extends Fragment {
         });
 
         binding.logoutButton.setOnClickListener(v -> showLogoutDialog());
+        
+        binding.deleteAccountButton.setOnClickListener(v -> showDeleteAccountDialog());
     }
 
     private boolean isValidRomanianPhoneNumber(String phone) {
@@ -189,9 +191,11 @@ public class AccountFragment extends Fragment {
                     .addOnSuccessListener(aVoid -> {
                         if (nameChanged) {
                             binding.userName.setText(newName.trim());
+                            cachedName = newName.trim();
                         }
                         if (phoneChanged) {
                             binding.userPhone.setText(newPhone.trim());
+                            cachedPhone = newPhone.trim();
                         }
 
                         String message = "Profile updated successfully";
@@ -219,6 +223,44 @@ public class AccountFragment extends Fragment {
                .setPositiveButton(R.string.logout, (dialog, which) -> logout())
                .setNegativeButton(R.string.cancel, null)
                .show();
+    }
+
+    private void showDeleteAccountDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.CustomAlertDialog);
+        builder.setTitle("Delete Account")
+               .setMessage("Are you sure you want to delete your account? This action cannot be undone and all your data will be permanently deleted.")
+               .setPositiveButton("Delete", (dialog, which) -> deleteAccount())
+               .setNegativeButton("Cancel", null)
+               .show();
+    }
+
+    private void deleteAccount() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+            
+            // First delete all user data from Firestore
+            db.collection("users").document(userId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> {
+                        // Then delete the user account
+                        user.delete()
+                                .addOnSuccessListener(aVoid2 -> {
+                                    Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                                    Intent intent = new Intent(getActivity(), LoginActivity.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(intent);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Toast.makeText(getContext(), "Failed to delete account: " + e.getMessage(),
+                                            Toast.LENGTH_SHORT).show();
+                                });
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(getContext(), "Failed to delete user data: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    });
+        }
     }
 
     private void logout() {

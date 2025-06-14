@@ -84,7 +84,20 @@ public class LoginActivity extends AppCompatActivity {
                             }
                         }
                     } else {
-                        showError("Invalid email or password");
+                        String errorMessage = "Invalid email or password";
+                        if (task.getException() != null) {
+                            String exceptionMessage = task.getException().getMessage();
+                            if (exceptionMessage != null) {
+                                if (exceptionMessage.contains("no user record")) {
+                                    errorMessage = "No account exists with this email address";
+                                } else if (exceptionMessage.contains("password is invalid")) {
+                                    errorMessage = "Incorrect password";
+                                } else if (exceptionMessage.contains("network")) {
+                                    errorMessage = "Network error. Please check your connection";
+                                }
+                            }
+                        }
+                        showError(errorMessage);
                     }
                 });
     }
@@ -99,25 +112,29 @@ public class LoginActivity extends AppCompatActivity {
 
         hideError();
 
-        mAuth.fetchSignInMethodsForEmail(email)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        if (task.getResult().getSignInMethods().isEmpty()) {
-                            showError("No account exists with this email address");
-                        } else {
-                            mAuth.sendPasswordResetEmail(email)
-                                    .addOnCompleteListener(resetTask -> {
-                                        if (resetTask.isSuccessful()) {
-                                            Toast.makeText(LoginActivity.this,
-                                                    "Password reset email sent",
-                                                    Toast.LENGTH_LONG).show();
-                                        } else {
-                                            showError("Failed to send reset email");
-                                        }
-                                    });
-                        }
+        // Send password reset email directly - Firebase will handle the validation
+        mAuth.sendPasswordResetEmail(email)
+                .addOnCompleteListener(resetTask -> {
+                    if (resetTask.isSuccessful()) {
+                        Toast.makeText(LoginActivity.this,
+                                "Password reset email sent to " + email,
+                                Toast.LENGTH_LONG).show();
+                        hideError();
                     } else {
-                        showError("Failed to check email address");
+                        String errorMessage = "Failed to send reset email";
+                        if (resetTask.getException() != null) {
+                            String exceptionMessage = resetTask.getException().getMessage();
+                            if (exceptionMessage != null) {
+                                if (exceptionMessage.contains("no user record")) {
+                                    errorMessage = "No account exists with this email address";
+                                } else if (exceptionMessage.contains("network")) {
+                                    errorMessage = "Network error. Please check your connection";
+                                } else if (exceptionMessage.contains("too many requests")) {
+                                    errorMessage = "Too many requests. Please try again later";
+                                }
+                            }
+                        }
+                        showError(errorMessage);
                     }
                 });
     }

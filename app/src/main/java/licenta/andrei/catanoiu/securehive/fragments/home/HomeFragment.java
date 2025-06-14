@@ -265,6 +265,8 @@ public class HomeFragment extends Fragment implements DeviceAdapter.DeviceAdapte
         if (mAuth.getCurrentUser() != null) {
             loadUserDevices();
         }
+        // Refresh devices when returning to this fragment
+        loadUserDevices();
     }
 
     @Override

@@ -1,24 +1,31 @@
 package licenta.andrei.catanoiu.securehive.devices;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.app.AlertDialog;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FieldValue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import licenta.andrei.catanoiu.securehive.R;
+import licenta.andrei.catanoiu.securehive.activities.DeviceDetailsActivity;
 import licenta.andrei.catanoiu.securehive.utils.DeviceIdDecoder;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder> {
@@ -54,15 +61,16 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         UserDevice userDevice = userDevices.get(position);
         holder.deviceName.setText(userDevice.getCustomName());
+        holder.deviceType.setText(DeviceIdDecoder.getDeviceType(userDevice.getDeviceId()).name());
         
         // Setăm imaginea corectă în funcție de tipul dispozitivului
         DeviceIdDecoder.DeviceType deviceType = DeviceIdDecoder.getDeviceType(userDevice.getDeviceId());
         switch (deviceType) {
             case PIR:
-                holder.deviceIcon.setImageResource(R.drawable.senzorpir);
+                holder.deviceIcon.setImageResource(R.drawable.pir);
                 break;
             case GAS:
-                holder.deviceIcon.setImageResource(R.drawable.senzorgaz);
+                holder.deviceIcon.setImageResource(R.drawable.gaz);
                 break;
             default:
                 holder.deviceIcon.setImageResource(R.drawable.ic_device);
@@ -79,11 +87,38 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
             updateDeviceStatusUI(holder, deviceStatuses.get(userDevice.getDeviceId()));
         }
 
-        // Click listener pentru butonul de ștergere
-        holder.deleteButton.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onDeleteClick(userDevice, holder.getAdapterPosition());
-            }
+        // Ștergere device
+        holder.deleteDeviceButton.setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Șterge dispozitivul");
+            builder.setMessage("Ești sigur că vrei să ștergi dispozitivul \"" + userDevice.getCustomName() + "\"?");
+            builder.setPositiveButton("Șterge", (dialog, which) -> {
+                String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                String deviceKey = userDevice.getDeviceId();
+                // Șterge device-ul din map-ul userDevices
+                Map<String, Object> updates = new HashMap<>();
+                updates.put("userDevices." + deviceKey, FieldValue.delete());
+                FirebaseFirestore.getInstance()
+                    .collection("users").document(userId)
+                    .update(updates)
+                    .addOnSuccessListener(aVoid -> {
+                        userDevices.remove(position);
+                        notifyItemRemoved(position);
+                        notifyItemRangeChanged(position, userDevices.size());
+                        Toast.makeText(context, "Dispozitiv șters cu succes", Toast.LENGTH_SHORT).show();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(context, "Eroare la ștergere: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    });
+            });
+            builder.setNegativeButton("Anulează", (dialog, which) -> dialog.cancel());
+            builder.show();
+        });
+
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), DeviceDetailsActivity.class);
+            intent.putExtra("device", userDevice);
+            v.getContext().startActivity(intent);
         });
     }
 
@@ -161,15 +196,17 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
     static class ViewHolder extends RecyclerView.ViewHolder {
         final TextView deviceName;
         final TextView deviceStatus;
-        final ImageButton deleteButton;
         final ImageView deviceIcon;
+        final TextView deviceType;
+        final ImageButton deleteDeviceButton;
 
         ViewHolder(View view) {
             super(view);
             deviceName = view.findViewById(R.id.deviceName);
             deviceStatus = view.findViewById(R.id.deviceStatus);
-            deleteButton = view.findViewById(R.id.deleteButton);
             deviceIcon = view.findViewById(R.id.deviceIcon);
+            deviceType = view.findViewById(R.id.deviceType);
+            deleteDeviceButton = view.findViewById(R.id.deleteDeviceButton);
         }
     }
 }

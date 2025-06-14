@@ -70,6 +70,7 @@
     </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
+        android:id="@+id/buttonsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
@@ -90,6 +91,16 @@
             android:layout_marginTop="8dp"
             android:text="@string/logout"
             style="@style/Widget.SecureHive.Button.Secondary"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/deleteAccountButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/delete_account"
+            android:textColor="@android:color/white"
+            android:backgroundTint="@color/error"
+            style="@style/Widget.SecureHive.Button"/>
 
     </LinearLayout>
 

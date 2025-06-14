@@ -26,7 +26,7 @@
     <string name="enter_phone_number">Enter phone number</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
-    <string name="device_name">Nume dispozitiv</string>
+    <string name="device_name">Device Name</string>
     <string name="id">ID</string>
     <string name="status">Status</string>
     <string name="logout">Logout</string>
@@ -50,4 +50,30 @@
     <string name="add_a_device">Add a device to your account</string>
     <string name="device_summary">Devices summary</string>
     <string name="phone_number">Phone number</string>
+    <string name="device_icon">Device Icon</string>
+    
+    <!-- New strings for alerts and filtering -->
+    <string name="filter_alerts">Filter Alerts</string>
+    <string name="device_type">Device Type</string>
+    <string name="clear_filters">Clear Filters</string>
+    <string name="date_filter">Date Filter</string>
+    <string name="delete_account">Delete Account</string>
+    <string name="clear">Clear</string>
+    <string name="select_device">Select Device</string>
+    <string name="select_device_type">Select Device Type</string>
+    <string name="severity">Severity</string>
+    <string name="select_severity">Select Severity</string>
+    <string name="date_range">Date Range</string>
+    <string name="start_date">Start Date</string>
+    <string name="end_date">End Date</string>
+    <string name="no_date_range_selected">No date range selected</string>
+    <string name="apply_filters">Apply Filters</string>
+    <string name="all_devices">All Devices</string>
+    <string name="all_types">All Types</string>
+    <string name="all_severities">All Severities</string>
+    
+    <!-- Notification strings -->
+    <string name="security_alert">Security Alert</string>
+    <string name="device_status_update">Device Status Update</string>
+    <string name="select_device_name">Select Device Name</string>
 </resources>
