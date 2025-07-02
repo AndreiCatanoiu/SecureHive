@@ -9,16 +9,13 @@ public class DeviceIdDecoder {
 
     public static String decodeDeviceId(String encodedId) {
         try {
-            // Decodăm Base64
             byte[] decodedBytes = Base64.decode(encodedId, Base64.DEFAULT);
-            
-            // Aplicăm XOR cu cheia
+
             byte[] result = new byte[decodedBytes.length];
             for (int i = 0; i < decodedBytes.length; i++) {
                 result[i] = (byte)(decodedBytes[i] ^ KEY[i % KEY.length]);
             }
-            
-            // Convertim la String
+
             String decodedId = new String(result);
             Log.d(TAG, "Decoded ID: " + decodedId + " from: " + encodedId);
             return decodedId;

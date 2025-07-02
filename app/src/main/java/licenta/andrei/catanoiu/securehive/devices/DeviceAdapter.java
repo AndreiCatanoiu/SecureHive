@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.app.AlertDialog;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -16,9 +15,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,10 +34,12 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
     private static final String TAG = "DeviceAdapter";
     private final ArrayList<UserDevice> userDevices;
-    private final Map<String, Device> deviceStatuses;
+    private final Map<String, Device> deviceStatuses = new HashMap<>();
     private final Context context;
     private final DeviceAdapterListener listener;
     private final FirebaseFirestore db;
+    private final Map<String, ValueEventListener> deviceStatusListeners = new HashMap<>();
+    private final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference();
 
     public interface DeviceAdapterListener {
         void onDeleteClick(UserDevice userDevice, int position);
@@ -45,7 +49,6 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
     public DeviceAdapter(Context context, ArrayList<UserDevice> userDevices, DeviceAdapterListener listener) {
         this.context = context;
         this.userDevices = userDevices;
-        this.deviceStatuses = new HashMap<>();
         this.listener = listener;
         this.db = FirebaseFirestore.getInstance();
     }
@@ -62,8 +65,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         UserDevice userDevice = userDevices.get(position);
         holder.deviceName.setText(userDevice.getCustomName());
         holder.deviceType.setText(DeviceIdDecoder.getDeviceType(userDevice.getDeviceId()).name());
-        
-        // Setăm imaginea corectă în funcție de tipul dispozitivului
+
         DeviceIdDecoder.DeviceType deviceType = DeviceIdDecoder.getDeviceType(userDevice.getDeviceId());
         switch (deviceType) {
             case PIR:
@@ -76,18 +78,28 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 holder.deviceIcon.setImageResource(R.drawable.ic_device);
                 break;
         }
-        
-        // Încărcăm statusul device-ului din Firestore dacă nu îl avem deja
-        if (!deviceStatuses.containsKey(userDevice.getDeviceId())) {
-            holder.deviceStatus.setText("Loading...");
-            holder.deviceStatus.setTextColor(context.getColor(R.color.text_secondary));
-            
-            loadDeviceStatus(userDevice.getDeviceId(), holder);
+
+        String deviceId = userDevice.getDeviceId();
+        if (!deviceStatusListeners.containsKey(deviceId)) {
+            ValueEventListener listener = new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    Device device = snapshot.getValue(Device.class);
+                    if (device != null) {
+                        deviceStatuses.put(deviceId, device);
+                        updateDeviceStatusUI(holder, device);
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            };
+            dbRef.child("devices").child(deviceId).addValueEventListener(listener);
+            deviceStatusListeners.put(deviceId, listener);
         } else {
-            updateDeviceStatusUI(holder, deviceStatuses.get(userDevice.getDeviceId()));
+            Device device = deviceStatuses.get(deviceId);
+            updateDeviceStatusUI(holder, device);
         }
 
-        // Ștergere device
         holder.deleteDeviceButton.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
             builder.setTitle("Șterge dispozitivul");
@@ -95,16 +107,20 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
             builder.setPositiveButton("Șterge", (dialog, which) -> {
                 String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 String deviceKey = userDevice.getDeviceId();
-                // Șterge device-ul din map-ul userDevices
-                Map<String, Object> updates = new HashMap<>();
-                updates.put("userDevices." + deviceKey, FieldValue.delete());
-                FirebaseFirestore.getInstance()
-                    .collection("users").document(userId)
-                    .update(updates)
+
+                DatabaseReference db = FirebaseDatabase.getInstance().getReference();
+                db.child("users").child(userId).child("userDevices").child(deviceKey)
+                    .removeValue()
                     .addOnSuccessListener(aVoid -> {
-                        userDevices.remove(position);
-                        notifyItemRemoved(position);
-                        notifyItemRangeChanged(position, userDevices.size());
+
+                        int currentPosition = userDevices.indexOf(userDevice);
+                        if (currentPosition != -1) {
+                            userDevices.remove(currentPosition);
+                            notifyItemRemoved(currentPosition);
+                            if (currentPosition < userDevices.size()) {
+                                notifyItemRangeChanged(currentPosition, userDevices.size() - currentPosition);
+                            }
+                        }
                         Toast.makeText(context, "Dispozitiv șters cu succes", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
@@ -122,25 +138,14 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         });
     }
 
-    private void loadDeviceStatus(String deviceId, ViewHolder holder) {
-        db.collection("devices").document(deviceId)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    Device device = documentSnapshot.toObject(Device.class);
-                    if (device != null) {
-                        deviceStatuses.put(deviceId, device);
-                        updateDeviceStatusUI(holder, device);
-                    } else {
-                        if (listener != null) {
-                            listener.onDeviceStatusError(deviceId, "Device not found");
-                        }
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    if (listener != null) {
-                        listener.onDeviceStatusError(deviceId, e.getMessage());
-                    }
-                });
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+
+        for (Map.Entry<String, ValueEventListener> entry : deviceStatusListeners.entrySet()) {
+            dbRef.child("devices").child(entry.getKey()).removeEventListener(entry.getValue());
+        }
+        deviceStatusListeners.clear();
     }
 
     private void updateDeviceStatusUI(ViewHolder holder, Device device) {
@@ -181,7 +186,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
     public void updateDevices(ArrayList<UserDevice> newUserDevices) {
         this.userDevices.clear();
         this.userDevices.addAll(newUserDevices);
-        this.deviceStatuses.clear(); // Resetăm cache-ul de statusuri
+        this.deviceStatuses.clear();
         notifyDataSetChanged();
     }
 

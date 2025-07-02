@@ -7,14 +7,20 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import licenta.andrei.catanoiu.securehive.R;
+
+import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -76,6 +82,30 @@ public class LoginActivity extends AppCompatActivity {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
                             if (user.isEmailVerified()) {
+                                FirebaseMessaging.getInstance().getToken()
+                                    .addOnCompleteListener(tokenTask -> {
+                                        if (tokenTask.isSuccessful()) {
+                                            String token = tokenTask.getResult();
+                                            DatabaseReference db = FirebaseDatabase.getInstance().getReference();
+                                            db.child("users").child(user.getUid()).child("fcmTokens").child(token).setValue(true);
+                                        }
+                                    });
+
+                                DatabaseReference db = FirebaseDatabase.getInstance().getReference();
+                                db.child("users").child(user.getUid()).addListenerForSingleValueEvent(new com.google.firebase.database.ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull com.google.firebase.database.DataSnapshot snapshot) {
+                                        if (!snapshot.exists()) {
+                                            Map<String, Object> userData = new java.util.HashMap<>();
+                                            userData.put("email", user.getEmail());
+                                            userData.put("name", user.getDisplayName());
+                                            userData.put("createdAt", System.currentTimeMillis());
+                                            db.child("users").child(user.getUid()).setValue(userData);
+                                        }
+                                    }
+                                    @Override
+                                    public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) {}
+                                });
                                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                                 finish();
                             } else {
@@ -109,10 +139,8 @@ public class LoginActivity extends AppCompatActivity {
             showError("Please enter your email address");
             return;
         }
-
         hideError();
 
-        // Send password reset email directly - Firebase will handle the validation
         mAuth.sendPasswordResetEmail(email)
                 .addOnCompleteListener(resetTask -> {
                     if (resetTask.isSuccessful()) {

@@ -12,9 +12,6 @@
         android:layout_height="wrap_content"
         android:padding="24dp">
 
-        <!-- Logo Section -->
-
-        <!-- Login Card -->
         <LinearLayout
             android:id="@+id/logoContainer"
             android:layout_width="wrap_content"
@@ -47,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="Secure your home with smart devices"
+                android:text="@string/app_description"
                 android:textAlignment="center"
                 android:textAppearance="?attr/textAppearanceBody2"
                 android:textColor="@color/text_secondary" />
@@ -74,7 +71,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Welcome Back"
+                    android:text="@string/welcome_back"
                     android:textAppearance="?attr/textAppearanceHeadline5"
                     android:textColor="@color/black"
                     android:textStyle="bold"
@@ -84,13 +81,12 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sign in to your account"
+                    android:text="@string/sign_in"
                     android:textAppearance="?attr/textAppearanceBody2"
                     android:textColor="@color/text_secondary"
                     android:layout_gravity="center"
                     android:layout_marginBottom="32dp" />
 
-                <!-- Email Input -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/emailLayout"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -112,7 +108,6 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Password Input -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/passwordLayout"
                     style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
@@ -136,7 +131,6 @@
 
                 </com.google.android.material.textfield.TextInputLayout>
 
-                <!-- Error Text -->
                 <TextView
                     android:id="@+id/errorText"
                     android:layout_width="wrap_content"
@@ -146,7 +140,6 @@
                     android:visibility="gone"
                     android:textSize="14sp" />
 
-                <!-- Login Button -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/loginButton"
                     android:layout_width="match_parent"
@@ -158,7 +151,6 @@
                     app:backgroundTint="@color/accent"
                     app:cornerRadius="12dp" />
 
-                <!-- Forgot Password -->
                 <TextView
                     android:id="@+id/forgotPasswordText"
                     android:layout_width="wrap_content"
@@ -174,7 +166,6 @@
 
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Register Prompt -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -190,7 +181,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Don't have an account? "
+                android:text="@string/create_acc"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
 
@@ -198,7 +189,7 @@
                 android:id="@+id/registerPrompt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Register"
+                android:text="@string/register_btn"
                 android:textColor="@color/primary"
                 android:textSize="14sp"
                 android:textStyle="bold"

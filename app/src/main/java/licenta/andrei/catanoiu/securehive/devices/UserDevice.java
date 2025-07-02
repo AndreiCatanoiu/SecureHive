@@ -2,29 +2,25 @@ package licenta.andrei.catanoiu.securehive.devices;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import com.google.firebase.Timestamp;
 
 public class UserDevice implements Parcelable {
     private String deviceId;
     private String customName;
-    private Timestamp addedAt;
+    private long addedAt;
 
     public UserDevice() {
-        // Required empty constructor for Firestore
     }
 
     public UserDevice(String deviceId, String customName) {
         this.deviceId = deviceId;
         this.customName = customName != null && !customName.trim().isEmpty() ? customName.trim() : deviceId;
-        this.addedAt = Timestamp.now();
+        this.addedAt = System.currentTimeMillis();
     }
 
     protected UserDevice(Parcel in) {
         deviceId = in.readString();
         customName = in.readString();
-        long seconds = in.readLong();
-        int nanoseconds = in.readInt();
-        addedAt = new Timestamp(seconds, nanoseconds);
+        addedAt = in.readLong();
     }
 
     public static final Creator<UserDevice> CREATOR = new Creator<UserDevice>() {
@@ -55,11 +51,11 @@ public class UserDevice implements Parcelable {
         this.customName = customName != null && !customName.trim().isEmpty() ? customName.trim() : this.deviceId;
     }
 
-    public Timestamp getAddedAt() {
+    public long getAddedAt() {
         return addedAt;
     }
 
-    public void setAddedAt(Timestamp addedAt) {
+    public void setAddedAt(long addedAt) {
         this.addedAt = addedAt;
     }
 
@@ -72,8 +68,7 @@ public class UserDevice implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(deviceId);
         dest.writeString(customName);
-        dest.writeLong(addedAt != null ? addedAt.getSeconds() : 0);
-        dest.writeInt(addedAt != null ? addedAt.getNanoseconds() : 0);
+        dest.writeLong(addedAt);
     }
 
     @Override

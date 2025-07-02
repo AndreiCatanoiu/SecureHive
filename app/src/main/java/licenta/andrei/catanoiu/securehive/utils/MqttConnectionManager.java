@@ -17,7 +17,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 public class MqttConnectionManager {
     private static final String TAG = "MqttConnectionManager";
-    private static final String BROKER_URL = "tcp://andreicatanooiu.ro:1883";
+    private static final String BROKER_URL = "tcp://andreicatanoiu.ro:1883";
     private static final String USERNAME = "admin";
     private static final String PASSWORD = "admin";
     
@@ -76,15 +76,21 @@ public class MqttConnectionManager {
                 options.setAutomaticReconnect(true);
                 options.setMaxInflight(10);
                 
+                Log.d(TAG, "MQTT Connect Options set - Username: " + USERNAME + ", Timeout: 30s, KeepAlive: 60s");
+                
                 mqttClient.setCallback(new MqttCallback() {
                     @Override
                     public void connectionLost(Throwable cause) {
                         Log.e(TAG, "MQTT connection lost", cause);
+                        if (cause != null) {
+                            Log.e(TAG, "Connection lost reason: " + cause.getMessage());
+                            Log.e(TAG, "Connection lost cause class: " + cause.getClass().getSimpleName());
+                            cause.printStackTrace();
+                        }
                         isConnected = false;
                         String reason = cause != null ? cause.getMessage() : "Unknown reason";
                         notifyDisconnected(reason);
-                        
-                        // Auto-reconnect after delay
+
                         mainHandler.postDelayed(() -> {
                             if (!isConnected) {
                                 Log.d(TAG, "Attempting auto-reconnect...");
@@ -106,6 +112,7 @@ public class MqttConnectionManager {
                     }
                 });
                 
+                Log.d(TAG, "Attempting to connect to MQTT broker...");
                 mqttClient.connect(options);
                 isConnected = true;
                 Log.d(TAG, "Successfully connected to MQTT broker");
@@ -113,11 +120,18 @@ public class MqttConnectionManager {
                 
             } catch (MqttException e) {
                 Log.e(TAG, "MQTT connection error", e);
+                Log.e(TAG, "MQTT Reason Code: " + e.getReasonCode());
+                Log.e(TAG, "MQTT Error Message: " + e.getMessage());
+                Log.e(TAG, "MQTT Error Cause: " + (e.getCause() != null ? e.getCause().getMessage() : "No cause"));
+                e.printStackTrace();
                 isConnected = false;
                 String error = getErrorMessage(e);
                 notifyError(error);
             } catch (Exception e) {
                 Log.e(TAG, "Unexpected error during MQTT connection", e);
+                Log.e(TAG, "Exception class: " + e.getClass().getSimpleName());
+                Log.e(TAG, "Exception message: " + e.getMessage());
+                e.printStackTrace();
                 isConnected = false;
                 notifyError("Eroare neașteptată: " + e.getMessage());
             }

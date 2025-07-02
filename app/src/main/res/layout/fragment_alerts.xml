@@ -39,7 +39,6 @@
                 android:layout_marginTop="8dp"
                 android:orientation="vertical">
 
-                <!-- Filter Button Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -65,7 +64,6 @@
 
                 </LinearLayout>
 
-                <!-- Filter Options (Hidden by default) -->
                 <LinearLayout
                     android:id="@+id/filterOptionsContainer"
                     android:layout_width="match_parent"
@@ -76,32 +74,6 @@
                     android:layout_marginTop="8dp"
                     android:visibility="gone">
 
-                    <!-- Device Name Filter -->
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="@string/device_name"
-                        android:textAppearance="?attr/textAppearanceSubtitle2"
-                        android:textColor="@color/text_primary"
-                        android:layout_marginBottom="8dp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/deviceNameLayout"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:hint="@string/select_device_name"
-                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
-
-                        <AutoCompleteTextView
-                            android:id="@+id/deviceNameSpinner"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="none" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <!-- Device Type Filter -->
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -126,7 +98,6 @@
 
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Date Range -->
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -161,7 +132,6 @@
 
                     </LinearLayout>
 
-                    <!-- Selected Date Range Display -->
                     <TextView
                         android:id="@+id/dateRangeText"
                         android:layout_width="match_parent"
@@ -172,7 +142,6 @@
                         android:gravity="center"
                         android:layout_marginBottom="16dp" />
 
-                    <!-- Apply Filters Button -->
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/applyFiltersButton"
                         android:layout_width="match_parent"

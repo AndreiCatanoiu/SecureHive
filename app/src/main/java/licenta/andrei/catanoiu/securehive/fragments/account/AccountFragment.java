@@ -15,7 +15,12 @@ import androidx.fragment.app.Fragment;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +35,7 @@ public class AccountFragment extends Fragment {
     private static final String TAG = "AccountFragment";
     private FragmentAccountBinding binding;
     private FirebaseAuth mAuth;
-    private FirebaseFirestore db;
+    private DatabaseReference db;
     private String cachedName;
     private String cachedPhone;
 
@@ -38,23 +43,25 @@ public class AccountFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
-        
-        // Preîncărcăm datele utilizatorului
+        db = FirebaseDatabase.getInstance().getReference();
+
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
-            db.collection("users").document(user.getUid())
-                    .get()
-                    .addOnSuccessListener(document -> {
-                        if (document.exists()) {
-                            cachedName = document.getString("name");
-                            cachedPhone = document.getString("phone");
+            db.child("users").child(user.getUid())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            cachedName = snapshot.child("name").getValue(String.class);
+                            cachedPhone = snapshot.child("phone").getValue(String.class);
                             updateUIWithCachedData();
                         }
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error loading user data", e);
-                    });
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Error loading user data", error.toException());
+                    }
+                });
         }
     }
 
@@ -75,7 +82,6 @@ public class AccountFragment extends Fragment {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             binding.userEmail.setText(user.getEmail());
-            // Setăm datele din cache dacă există
             if (cachedName != null) {
                 binding.userName.setText(cachedName);
             }
@@ -115,10 +121,8 @@ public class AccountFragment extends Fragment {
     }
 
     private boolean isValidRomanianPhoneNumber(String phone) {
-        // Eliminăm spațiile și caracterele speciale
         String cleanPhone = phone.replaceAll("[\\s-]", "");
-        
-        // Verificăm formatul: +40/0 urmat de 7/2/3 și încă 8 cifre
+
         return cleanPhone.matches("(\\+40|0)(2|3|7)[0-9]{8}");
     }
 
@@ -133,13 +137,12 @@ public class AccountFragment extends Fragment {
         phoneInput.setText(binding.userPhone.getText());
         
         builder.setView(view)
-               .setPositiveButton(R.string.save, null) // Setăm null pentru a preveni închiderea automată
+               .setPositiveButton(R.string.save, null)
                .setNegativeButton(R.string.cancel, null);
 
         AlertDialog dialog = builder.create();
         dialog.show();
 
-        // Setăm listener-ul pentru butonul de Save după ce dialogul este creat
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
             String newName = nameInput.getText().toString().trim();
             String newPhone = phoneInput.getText().toString().trim();
@@ -186,8 +189,7 @@ public class AccountFragment extends Fragment {
                 updates.put("phone", newPhone.trim());
             }
 
-            db.collection("users").document(user.getUid())
-                    .update(updates)
+            db.child("users").child(user.getUid()).updateChildren(updates)
                     .addOnSuccessListener(aVoid -> {
                         if (nameChanged) {
                             binding.userName.setText(newName.trim());
@@ -238,36 +240,40 @@ public class AccountFragment extends Fragment {
         FirebaseUser user = mAuth.getCurrentUser();
         if (user != null) {
             String userId = user.getUid();
-            
-            // First delete all user data from Firestore
-            db.collection("users").document(userId)
-                    .delete()
-                    .addOnSuccessListener(aVoid -> {
-                        // Then delete the user account
-                        user.delete()
-                                .addOnSuccessListener(aVoid2 -> {
-                                    Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
-                                    Intent intent = new Intent(getActivity(), LoginActivity.class);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                    startActivity(intent);
-                                })
-                                .addOnFailureListener(e -> {
-                                    Toast.makeText(getContext(), "Failed to delete account: " + e.getMessage(),
-                                            Toast.LENGTH_SHORT).show();
-                                });
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(getContext(), "Failed to delete user data: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show();
-                    });
+            db.child("users").child(userId)
+                .removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    user.delete()
+                        .addOnSuccessListener(aVoid2 -> {
+                            Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(getActivity(), LoginActivity.class);
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                            startActivity(intent);
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(getContext(), "Failed to delete account: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        });
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(getContext(), "Failed to delete user data: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
         }
     }
 
     private void logout() {
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user != null) {
+            FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
+                if (tokenTask.isSuccessful()) {
+                    String token = tokenTask.getResult();
+                    DatabaseReference db = FirebaseDatabase.getInstance().getReference();
+                    db.child("users").child(user.getUid()).child("fcmTokens").child(token).removeValue();
+                }
+            });
+        }
         mAuth.signOut();
-        Intent intent = new Intent(getActivity(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        startActivity(new Intent(getActivity(), LoginActivity.class));
+        requireActivity().finish();
     }
 
     @Override

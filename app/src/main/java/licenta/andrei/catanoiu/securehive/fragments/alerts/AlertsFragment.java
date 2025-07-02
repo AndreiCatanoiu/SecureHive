@@ -1,28 +1,24 @@
 package licenta.andrei.catanoiu.securehive.fragments.alerts;
 
 import android.app.DatePickerDialog;
-import android.app.Dialog;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Query;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,7 +26,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import licenta.andrei.catanoiu.securehive.R;
 import licenta.andrei.catanoiu.securehive.adapters.AlertsAdapter;
@@ -43,7 +38,7 @@ public class AlertsFragment extends Fragment {
     private static final String TAG = "AlertsFragment";
     private FragmentAlertsBinding binding;
     private AlertsAdapter adapter;
-    private FirebaseFirestore db;
+    private DatabaseReference db;
     private FirebaseAuth mAuth;
     private SimpleDateFormat dateFormat;
     private Date filterStartDate = null;
@@ -52,11 +47,10 @@ public class AlertsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        db = FirebaseFirestore.getInstance();
+        db = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
         dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-        
-        // Create notification channel
+
         NotificationService.createNotificationChannel(requireContext());
     }
 
@@ -76,7 +70,6 @@ public class AlertsFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        // Refresh alerts when returning to this fragment
         loadAlerts();
     }
 
@@ -87,10 +80,8 @@ public class AlertsFragment extends Fragment {
     }
 
     private void setupFilterListeners() {
-        // Filter button - toggles filter options visibility
         binding.filterButton.setOnClickListener(v -> toggleFilterOptions());
 
-        // Clear filters button
         binding.clearFiltersButton.setOnClickListener(v -> {
             filterStartDate = null;
             filterEndDate = null;
@@ -100,45 +91,21 @@ public class AlertsFragment extends Fragment {
             Toast.makeText(requireContext(), "Filters cleared", Toast.LENGTH_SHORT).show();
         });
 
-        // Setup filter options
         setupFilterOptions();
     }
 
     private void setupFilterOptions() {
-        // Setup spinners
         setupSpinners();
 
-        // Setup date buttons
         binding.startDateButton.setOnClickListener(v -> showDatePicker(true));
         binding.endDateButton.setOnClickListener(v -> showDatePicker(false));
 
-        // Setup apply button
         binding.applyFiltersButton.setOnClickListener(v -> applyFilters());
 
-        // Update date range text
         updateDateRangeText();
     }
 
     private void setupSpinners() {
-        // Device Name autocomplete (din device-urile userului)
-        db.collection("users").document(mAuth.getCurrentUser().getUid())
-            .collection("devices")
-            .get()
-            .addOnSuccessListener(querySnapshot -> {
-                List<String> deviceNames = new ArrayList<>();
-                deviceNames.add(getString(R.string.all_devices));
-                for (QueryDocumentSnapshot doc : querySnapshot) {
-                    String name = doc.getString("customName");
-                    if (name != null && !deviceNames.contains(name)) {
-                        deviceNames.add(name);
-                    }
-                }
-                ArrayAdapter<String> deviceNameAdapter = new ArrayAdapter<>(requireContext(),
-                        android.R.layout.simple_dropdown_item_1line, deviceNames);
-                binding.deviceNameSpinner.setAdapter(deviceNameAdapter);
-            });
-
-        // Device type dropdown (doar PIR, GAS etc)
         List<String> deviceTypes = new ArrayList<>();
         deviceTypes.add(getString(R.string.all_types));
         deviceTypes.add("PIR");
@@ -158,7 +125,6 @@ public class AlertsFragment extends Fragment {
 
     private void showFilterOptions() {
         binding.filterOptionsContainer.setVisibility(View.VISIBLE);
-        // Update spinners with current data
         setupSpinners();
         updateDateRangeText();
     }
@@ -169,30 +135,35 @@ public class AlertsFragment extends Fragment {
 
     private void showDatePicker(boolean isStartDate) {
         Calendar calendar = Calendar.getInstance();
-        
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 requireContext(),
                 (view, year, month, dayOfMonth) -> {
                     Calendar selectedCal = Calendar.getInstance();
-                    selectedCal.set(year, month, dayOfMonth, 
-                                  isStartDate ? 0 : 23, 
-                                  isStartDate ? 0 : 59, 
-                                  isStartDate ? 0 : 59);
-                    
+                    selectedCal.set(year, month, dayOfMonth,
+                            isStartDate ? 0 : 23,
+                            isStartDate ? 0 : 59,
+                            isStartDate ? 0 : 59);
+                    Date selectedDate = selectedCal.getTime();
                     if (isStartDate) {
-                        filterStartDate = selectedCal.getTime();
+                        filterStartDate = selectedDate;
                         binding.startDateButton.setText(dateFormat.format(filterStartDate));
                     } else {
-                        filterEndDate = selectedCal.getTime();
+                        filterEndDate = selectedDate;
                         binding.endDateButton.setText(dateFormat.format(filterEndDate));
                     }
-                    
                     updateDateRangeText();
                 },
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
         );
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+        if (isStartDate && filterEndDate != null) {
+            datePickerDialog.getDatePicker().setMaxDate(filterEndDate.getTime());
+        }
+        if (!isStartDate && filterStartDate != null) {
+            datePickerDialog.getDatePicker().setMinDate(filterStartDate.getTime());
+        }
         datePickerDialog.show();
     }
 
@@ -210,15 +181,6 @@ public class AlertsFragment extends Fragment {
     }
 
     private void applyFilters() {
-        // Device name filter
-        String selectedDeviceName = binding.deviceNameSpinner.getText().toString();
-        if (!selectedDeviceName.equals(getString(R.string.all_devices))) {
-            adapter.filterByDeviceName(selectedDeviceName);
-        } else {
-            adapter.filterByDeviceName("");
-        }
-
-        // Device type filter
         String selectedDeviceType = binding.deviceTypeSpinner.getText().toString();
         if (!selectedDeviceType.equals(getString(R.string.all_types))) {
             adapter.filterByDeviceType(selectedDeviceType);
@@ -226,7 +188,6 @@ public class AlertsFragment extends Fragment {
             adapter.filterByDeviceType("");
         }
 
-        // Date range filter cu validare
         if (filterStartDate != null && filterEndDate != null && filterStartDate.after(filterEndDate)) {
             Toast.makeText(requireContext(), "Data de început nu poate fi după data de sfârșit!", Toast.LENGTH_LONG).show();
             return;
@@ -245,52 +206,52 @@ public class AlertsFragment extends Fragment {
         }
         String userId = mAuth.getCurrentUser().getUid();
         Log.d(TAG, "[ALERTS] Start loading alerts for user: " + userId);
-        db.collection("users").document(userId)
-                .get()
-                .addOnSuccessListener(userDoc -> {
-                    List<Alert> allAlerts = new ArrayList<>();
-                    if (userDoc.exists() && userDoc.contains("userDevices")) {
-                        Map<String, Object> userDevices = (Map<String, Object>) userDoc.get("userDevices");
-                        Log.d(TAG, "[ALERTS] Found userDevices map with " + userDevices.size() + " devices");
-                        int[] remaining = {userDevices.size()};
-                        for (Map.Entry<String, Object> entry : userDevices.entrySet()) {
-                            Map<String, Object> deviceData = (Map<String, Object>) entry.getValue();
-                            String deviceId = (String) deviceData.get("deviceId");
-                            com.google.firebase.Timestamp addedAt = (com.google.firebase.Timestamp) deviceData.get("addedAt");
-                            String customName = (String) deviceData.get("customName");
-                            Log.d(TAG, "[ALERTS] Device: " + deviceId + ", addedAt: " + addedAt);
-                            if (deviceId == null || addedAt == null) {
-                                remaining[0]--;
-                                if (remaining[0] == 0) {
-                                    Log.d(TAG, "[ALERTS] All device queries finished (null deviceId/addedAt). Alerts found: " + allAlerts.size());
-                                    allAlerts.sort((a, b) -> {
-                                        Date timestampA = a.getTimestamp();
-                                        Date timestampB = b.getTimestamp();
-                                        if (timestampA == null && timestampB == null) return 0;
-                                        if (timestampA == null) return 1; // null timestamps go to end
-                                        if (timestampB == null) return -1;
-                                        return timestampB.compareTo(timestampA); // newest first
-                                    });
-                                    adapter.setAlerts(allAlerts);
-                                    updateEmptyState();
-                                }
-                                continue;
+        db.child("users").child(userId).child("userDevices").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot userDevicesSnapshot) {
+                List<Alert> allAlerts = new ArrayList<>();
+                if (userDevicesSnapshot.exists()) {
+                    int totalDevices = (int) userDevicesSnapshot.getChildrenCount();
+                    if (totalDevices == 0) {
+                        adapter.setAlerts(new ArrayList<>());
+                        updateEmptyState();
+                        return;
+                    }
+                    final int[] remaining = {totalDevices};
+                    for (DataSnapshot deviceSnapshot : userDevicesSnapshot.getChildren()) {
+                        String deviceId = deviceSnapshot.child("deviceId").getValue(String.class);
+                        Long addedAt = deviceSnapshot.child("addedAt").getValue(Long.class);
+                        String customName = deviceSnapshot.child("customName").getValue(String.class);
+                        if (deviceId == null || addedAt == null) {
+                            remaining[0]--;
+                            if (remaining[0] == 0) {
+                                adapter.setAlerts(allAlerts);
+                                updateEmptyState();
                             }
-                            db.collection("mqtt_messages")
-                                    .whereEqualTo("type", "alerts")
-                                    .whereEqualTo("deviceId", deviceId)
-                                    .whereGreaterThan("timestamp", addedAt)
-                                    .get()
-                                    .addOnSuccessListener(alertSnapshots -> {
-                                        Log.d(TAG, "[ALERTS] Found " + alertSnapshots.size() + " alerts for device " + deviceId);
-                                        for (QueryDocumentSnapshot alertDoc : alertSnapshots) {
+                            continue;
+                        }
+                        db.child("mqtt_messages").orderByChild("deviceId").equalTo(deviceId)
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot alertsSnapshot) {
+                                        for (DataSnapshot alertDoc : alertsSnapshot.getChildren()) {
                                             try {
-                                                Alert alert = alertDoc.toObject(Alert.class);
-                                                if (alert != null) {
-                                                    alert.setId(alertDoc.getId());
-                                                    alert.setDeviceName(customName);
+                                                String id = alertDoc.getKey();
+                                                String alertDeviceId = alertDoc.child("deviceId").getValue(String.class);
+                                                String deviceName = customName;
+                                                String deviceType = alertDoc.child("deviceType").getValue(String.class);
+                                                String message = alertDoc.child("payload").getValue(String.class);
+                                                Long timestampLong = alertDoc.child("timestamp").getValue(Long.class);
+                                                String severity = alertDoc.child("severity").getValue(String.class);
+                                                String type = alertDoc.child("type").getValue(String.class);
+
+                                                boolean deviceIdMatch = deviceId != null && alertDeviceId != null &&
+                                                    deviceId.length() >= 8 && alertDeviceId.length() >= 8 &&
+                                                    deviceId.substring(0, 8).equals(alertDeviceId.substring(0, 8));
+                                                if ("alerts".equals(type) && deviceIdMatch && timestampLong != null && timestampLong >= addedAt) {
+                                                    Date timestamp = new Date(timestampLong);
+                                                    Alert alert = new Alert(id, alertDeviceId, deviceName, deviceType, message, timestamp, severity);
                                                     allAlerts.add(alert);
-                                                    Log.d(TAG, "[ALERTS] Added alert: " + alert.getId() + " for device: " + deviceId);
                                                 }
                                             } catch (Exception e) {
                                                 Log.e(TAG, "[ALERTS] Error parsing alert document", e);
@@ -298,47 +259,40 @@ public class AlertsFragment extends Fragment {
                                         }
                                         remaining[0]--;
                                         if (remaining[0] == 0) {
-                                            Log.d(TAG, "[ALERTS] All device queries finished. Alerts found: " + allAlerts.size());
                                             allAlerts.sort((a, b) -> {
                                                 Date timestampA = a.getTimestamp();
                                                 Date timestampB = b.getTimestamp();
                                                 if (timestampA == null && timestampB == null) return 0;
-                                                if (timestampA == null) return 1; // null timestamps go to end
+                                                if (timestampA == null) return 1;
                                                 if (timestampB == null) return -1;
-                                                return timestampB.compareTo(timestampA); // newest first
+                                                return timestampB.compareTo(timestampA);
                                             });
                                             adapter.setAlerts(allAlerts);
                                             updateEmptyState();
                                         }
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Log.e(TAG, "[ALERTS] Error loading alerts for device " + deviceId, e);
+                                    }
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) {
+                                        Log.e(TAG, "[ALERTS] Error loading alerts for device " + deviceId, error.toException());
                                         remaining[0]--;
                                         if (remaining[0] == 0) {
-                                            Log.d(TAG, "[ALERTS] All device queries finished (with errors). Alerts found: " + allAlerts.size());
-                                            allAlerts.sort((a, b) -> {
-                                                Date timestampA = a.getTimestamp();
-                                                Date timestampB = b.getTimestamp();
-                                                if (timestampA == null && timestampB == null) return 0;
-                                                if (timestampA == null) return 1; // null timestamps go to end
-                                                if (timestampB == null) return -1;
-                                                return timestampB.compareTo(timestampA); // newest first
-                                            });
                                             adapter.setAlerts(allAlerts);
                                             updateEmptyState();
                                         }
-                                    });
-                        }
-                    } else {
-                        Log.d(TAG, "[ALERTS] No devices found for user.");
-                        adapter.setAlerts(new ArrayList<>());
-                        updateEmptyState();
+                                    }
+                                });
                     }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "[ALERTS] Error loading user devices", e);
-                    Toast.makeText(requireContext(), "Error loading alerts: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+                } else {
+                    adapter.setAlerts(new ArrayList<>());
+                    updateEmptyState();
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "[ALERTS] Error loading user devices", error.toException());
+                Toast.makeText(requireContext(), "Error loading alerts: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void updateEmptyState() {
@@ -366,24 +320,16 @@ public class AlertsFragment extends Fragment {
                 "medium"
         );
 
-        db.collection("users").document(userId)
-                .collection("alerts")
-                .add(testAlert)
-                .addOnSuccessListener(documentReference -> {
-                    testAlert.setId(documentReference.getId());
+        db.child("users").child(userId).child("alerts").push().setValue(testAlert)
+                .addOnSuccessListener(aVoid -> {
                     adapter.addAlert(testAlert);
                     updateEmptyState();
-                    
-                    // Show notification
                     NotificationService.showAlertNotification(requireContext(), testAlert);
-                    
                     Toast.makeText(requireContext(), "Test alert added", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error adding test alert", e);
-                    Toast.makeText(requireContext(), 
-                            "Error adding test alert: " + e.getMessage(), 
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Error adding test alert: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 

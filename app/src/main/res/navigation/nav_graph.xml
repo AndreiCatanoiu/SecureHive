@@ -11,27 +11,9 @@
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_devices"
-        android:name="licenta.andrei.catanoiu.securehive.fragments.devices.DevicesFragment"
-        android:label="@string/add_devices">
-        <action
-            android:id="@+id/action_devices_to_device_info"
-            app:destination="@id/navigation_device_info" />
-    </fragment>
-
-    <fragment
         android:id="@+id/navigation_account"
         android:name="licenta.andrei.catanoiu.securehive.fragments.account.AccountFragment"
         android:label="@string/title_account">
     </fragment>
-
-    <activity
-        android:id="@+id/navigation_device_info"
-        android:name="licenta.andrei.catanoiu.securehive.activities.DeviceInfoActivity"
-        android:label="@string/device_name">
-        <argument
-            android:name="deviceId"
-            app:argType="string" />
-    </activity>
 
 </navigation> 

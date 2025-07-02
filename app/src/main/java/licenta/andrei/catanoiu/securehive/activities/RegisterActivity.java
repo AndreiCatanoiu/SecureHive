@@ -14,9 +14,10 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,18 +33,14 @@ public class RegisterActivity extends AppCompatActivity {
     private TextView errorText;
     private FirebaseAuth mAuth;
     private MaterialButton registerButton;
-    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Inițializare Firebase
         mAuth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
 
-        // Inițializare views
         nameInput = findViewById(R.id.nameInput);
         emailInput = findViewById(R.id.emailInput);
         phoneInput = findViewById(R.id.phoneInput);
@@ -53,16 +50,13 @@ public class RegisterActivity extends AppCompatActivity {
         TextView loginPrompt = findViewById(R.id.loginPrompt);
         errorText = findViewById(R.id.errorText);
 
-        // Click listeners
         registerButton.setOnClickListener(v -> attemptRegister());
         loginPrompt.setOnClickListener(v -> finish());
     }
 
     private boolean isValidRomanianPhoneNumber(String phone) {
-        // Eliminăm spațiile și caracterele speciale
         String cleanPhone = phone.replaceAll("[\\s-]", "");
-        
-        // Verificăm formatul: +40/0 urmat de 7/2/3 și încă 8 cifre
+
         return cleanPhone.matches("(\\+40|0)(2|3|7)[0-9]{8}");
     }
 
@@ -73,7 +67,6 @@ public class RegisterActivity extends AppCompatActivity {
         String password = passwordInput.getText().toString().trim();
         String confirmPassword = confirmPasswordInput.getText().toString().trim();
 
-        // Validări
         if (name.isEmpty()) {
             showError("Please enter your name");
             return;
@@ -104,17 +97,13 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // Dezactivăm butonul pentru a preveni multiple clicuri
         registerButton.setEnabled(false);
 
-        // Ascunde eroarea dacă există
         hideError();
 
-        // Creare cont
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
-                        // Actualizare profil utilizator
                         UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                                 .setDisplayName(name)
                                 .build();
@@ -122,43 +111,34 @@ public class RegisterActivity extends AppCompatActivity {
                         mAuth.getCurrentUser().updateProfile(profileUpdates)
                                 .addOnCompleteListener(profileTask -> {
                                     if (profileTask.isSuccessful()) {
-                                        // Salvare date în Firestore
-                                        Map<String, Object> userData = new HashMap<>();
-                                        userData.put("name", name);
-                                        userData.put("email", email);
-                                        userData.put("phone", phone);
-                                        userData.put("devices", new ArrayList<String>());
-                                        userData.put("createdAt", System.currentTimeMillis());
+                                        FirebaseMessaging.getInstance().getToken().addOnCompleteListener(tokenTask -> {
+                                            DatabaseReference db = FirebaseDatabase.getInstance().getReference();
+                                            String userId = mAuth.getCurrentUser().getUid();
+                                            Map<String, Object> userData = new HashMap<>();
+                                            userData.put("name", name);
+                                            userData.put("email", email);
+                                            userData.put("phone", phone);
+                                            userData.put("createdAt", System.currentTimeMillis());
+                                            db.child("users").child(userId).setValue(userData);
+                                        });
 
-                                        db.collection("users")
-                                                .document(mAuth.getCurrentUser().getUid())
-                                                .set(userData)
-                                                .addOnSuccessListener(aVoid -> {
-                                                    // Trimite email de verificare
-                                                    mAuth.getCurrentUser().sendEmailVerification()
-                                                            .addOnCompleteListener(verificationTask -> {
-                                                                if (verificationTask.isSuccessful()) {
-                                                                    Toast.makeText(RegisterActivity.this,
-                                                                            "Account created successfully! Please check your email to verify your account.",
-                                                                            Toast.LENGTH_LONG).show();
-                                                                    
-                                                                    // Deconectare
-                                                                    mAuth.signOut();
-                                                                    
-                                                                    // Așteptăm 2 secunde și închidem activitatea
-                                                                    new Handler().postDelayed(() -> {
-                                                                        startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
-                                                                        finish();
-                                                                    }, 2000);
-                                                                } else {
-                                                                    showError("Failed to send verification email");
-                                                                    registerButton.setEnabled(true);
-                                                                }
-                                                            });
-                                                })
-                                                .addOnFailureListener(e -> {
-                                                    showError("Failed to save user data: " + e.getMessage());
-                                                    registerButton.setEnabled(true);
+                                        mAuth.getCurrentUser().sendEmailVerification()
+                                                .addOnCompleteListener(verificationTask -> {
+                                                    if (verificationTask.isSuccessful()) {
+                                                        Toast.makeText(RegisterActivity.this,
+                                                                "Account created successfully! Please check your email to verify your account.",
+                                                                Toast.LENGTH_LONG).show();
+
+                                                        mAuth.signOut();
+
+                                                        new Handler().postDelayed(() -> {
+                                                            startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
+                                                            finish();
+                                                        }, 2000);
+                                                    } else {
+                                                        showError("Failed to send verification email");
+                                                        registerButton.setEnabled(true);
+                                                    }
                                                 });
                                     } else {
                                         showError("Failed to update profile");

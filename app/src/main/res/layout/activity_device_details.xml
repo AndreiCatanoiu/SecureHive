@@ -94,13 +94,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
-                android:text="Active" />
+                android:text="@string/active" />
 
             <RadioButton
                 android:id="@+id/inactiveRadioButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Inactive" />
+                android:text="@string/inactive" />
         </RadioGroup>
 
     </LinearLayout>

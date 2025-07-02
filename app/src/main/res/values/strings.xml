@@ -11,7 +11,6 @@
 
     <string name="edit_profile">Edit your profile</string>
     <string name="add_devices">Add a device to your account</string>
-    <string name="editBtn">Edit</string>
     <string name="addDeviceBtn">Add</string>
     <string name="logOutBtn">Log Out</string>
     <string name="add_a_new_device">Add a new device</string>
@@ -51,8 +50,8 @@
     <string name="device_summary">Devices summary</string>
     <string name="phone_number">Phone number</string>
     <string name="device_icon">Device Icon</string>
-    
-    <!-- New strings for alerts and filtering -->
+    <string name="alert_icon">Alert Icon</string>
+
     <string name="filter_alerts">Filter Alerts</string>
     <string name="device_type">Device Type</string>
     <string name="clear_filters">Clear Filters</string>
@@ -71,9 +70,28 @@
     <string name="all_devices">All Devices</string>
     <string name="all_types">All Types</string>
     <string name="all_severities">All Severities</string>
-    
-    <!-- Notification strings -->
+
     <string name="security_alert">Security Alert</string>
     <string name="device_status_update">Device Status Update</string>
     <string name="select_device_name">Select Device Name</string>
+    <string name="alert_details">Alert details</string>
+    <string name="device_information">Device information</string>
+    <string name="alert_information">Alert information</string>
+    <string name="alert_message">Alert message</string>
+    <string name="timestamp">Timestamp</string>
+    <string name="active">Active</string>
+    <string name="inactive">Inactive</string>
+    <string name="app_description">Secure your home with smart devices</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="sign_in">Sign in to your account</string>
+    <string name="create_acc">Don\'t have an account?</string>
+    <string name="register_btn">Register</string>
+    <string name="register_info">Create your secure account</string>
+    <string name="already_have_an_account">Already have an account?</string>
+    <string name="login">Login</string>
+    <string name="offline">Offline</string>
+    <string name="online">Online</string>
+    <string name="total">Total</string>
+    <string name="devices">Devices</string>
+    <string name="default_timestamp">01/01/2024 12:00</string>
 </resources>

@@ -13,9 +13,13 @@ import androidx.core.app.NotificationManagerCompat;
 import licenta.andrei.catanoiu.securehive.R;
 import licenta.andrei.catanoiu.securehive.activities.MainActivity;
 import licenta.andrei.catanoiu.securehive.models.Alert;
+import java.util.Random;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
 
 public class NotificationService {
-    private static final String CHANNEL_ID = "SecureHive_Alerts";
+    public static final String CHANNEL_ID = "SecureHive_Alerts";
     private static final String CHANNEL_NAME = "Security Alerts";
     private static final String CHANNEL_DESCRIPTION = "Notifications for security alerts and device status changes";
     
@@ -23,6 +27,10 @@ public class NotificationService {
 
     public static void createNotificationChannel(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.deleteNotificationChannel(CHANNEL_ID);
+            }
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
                     CHANNEL_NAME,
@@ -32,10 +40,9 @@ public class NotificationService {
             channel.enableVibration(true);
             channel.setVibrationPattern(new long[]{0, 500, 200, 500});
             channel.enableLights(true);
-
-            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
+            NotificationManager notificationManager2 = context.getSystemService(NotificationManager.class);
+            if (notificationManager2 != null) {
+                notificationManager2.createNotificationChannel(channel);
             }
         }
     }
@@ -45,22 +52,21 @@ public class NotificationService {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         intent.putExtra("fragment", "alerts");
         
+        int requestCode = new Random().nextInt();
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context, 
-                0, 
+                requestCode, 
                 intent, 
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        // Add null checks for alert fields
         String deviceName = alert.getDeviceName() != null ? alert.getDeviceName() : "Unknown Device";
         String message = alert.getMessage() != null ? alert.getMessage() : "No message";
         String severity = alert.getSeverity() != null ? alert.getSeverity() : "unknown";
         
         String title = "Security Alert - " + deviceName;
-        
-        // Set icon based on severity
-        int icon = R.drawable.ic_warning;
+
+        int icon = R.drawable.app_logo;
         if ("high".equalsIgnoreCase(severity)) {
             icon = R.drawable.ic_error;
         } else if ("medium".equalsIgnoreCase(severity)) {
@@ -77,20 +83,25 @@ public class NotificationService {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
-                .setVibrate(new long[]{0, 500, 200, 500});
+                .setVibrate(new long[]{0, 500, 200, 500})
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setFullScreenIntent(pendingIntent, true);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(notificationId++, builder.build());
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify(notificationId++, builder.build());
+        }
     }
 
     public static void showDeviceStatusNotification(Context context, String deviceName, String status) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        intent.putExtra("fragment", "devices");
+        intent.putExtra("openFragment", "alerts");
         
+        int requestCode = new Random().nextInt();
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context, 
-                0, 
+                requestCode, 
                 intent, 
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
@@ -110,16 +121,19 @@ public class NotificationService {
                 .setContentIntent(pendingIntent);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(notificationId++, builder.build());
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify(notificationId++, builder.build());
+        }
     }
 
     public static void showGeneralNotification(Context context, String title, String message) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         
+        int requestCode = new Random().nextInt();
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 context, 
-                0, 
+                requestCode, 
                 intent, 
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
@@ -133,6 +147,8 @@ public class NotificationService {
                 .setContentIntent(pendingIntent);
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(notificationId++, builder.build());
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify(notificationId++, builder.build());
+        }
     }
 } 

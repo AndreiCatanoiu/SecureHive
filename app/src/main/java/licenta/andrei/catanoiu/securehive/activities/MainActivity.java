@@ -1,5 +1,6 @@
 package licenta.andrei.catanoiu.securehive.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,28 +23,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize notification service
         NotificationService.createNotificationChannel(this);
 
-        // Găsim NavHostFragment și obținem NavController
         NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.nav_host_fragment);
         if (navHostFragment != null) {
             navController = navHostFragment.getNavController();
         }
 
-        // Configurăm BottomNavigationView
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
 
-        // Configurăm AppBar
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_alerts, R.id.navigation_account)
                 .build();
 
-        // Setăm navigarea
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
 
-        // Handle fragment navigation from notifications
         String targetFragment = getIntent().getStringExtra("fragment");
         if (targetFragment != null) {
             switch (targetFragment) {
@@ -60,5 +55,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onSupportNavigateUp() {
         return navController.navigateUp() || super.onSupportNavigateUp();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (navController == null) return;
+        String targetFragment = intent.getStringExtra("fragment");
+        if (targetFragment != null) {
+            switch (targetFragment) {
+                case "alerts":
+                    navController.navigate(R.id.navigation_alerts);
+                    break;
+                case "devices":
+                    navController.navigate(R.id.navigation_home);
+                    break;
+            }
+        }
     }
 }
