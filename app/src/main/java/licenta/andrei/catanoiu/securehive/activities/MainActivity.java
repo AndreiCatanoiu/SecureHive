@@ -8,6 +8,7 @@ import androidx.navigation.NavController;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.navigation.NavOptions;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -43,10 +44,16 @@ public class MainActivity extends AppCompatActivity {
         if (targetFragment != null) {
             switch (targetFragment) {
                 case "alerts":
-                    navController.navigate(R.id.navigation_alerts);
+                    navController.navigate(R.id.navigation_alerts, null,
+                        new NavOptions.Builder()
+                            .setPopUpTo(R.id.navigation_home, false)
+                            .build());
                     break;
                 case "devices":
-                    navController.navigate(R.id.navigation_home);
+                    navController.navigate(R.id.navigation_home, null,
+                        new NavOptions.Builder()
+                            .setPopUpTo(R.id.navigation_alerts, false)
+                            .build());
                     break;
             }
         }
@@ -66,10 +73,16 @@ public class MainActivity extends AppCompatActivity {
         if (targetFragment != null) {
             switch (targetFragment) {
                 case "alerts":
-                    navController.navigate(R.id.navigation_alerts);
+                    navController.navigate(R.id.navigation_alerts, null,
+                        new NavOptions.Builder()
+                            .setPopUpTo(R.id.navigation_home, false)
+                            .build());
                     break;
                 case "devices":
-                    navController.navigate(R.id.navigation_home);
+                    navController.navigate(R.id.navigation_home, null,
+                        new NavOptions.Builder()
+                            .setPopUpTo(R.id.navigation_alerts, false)
+                            .build());
                     break;
             }
         }

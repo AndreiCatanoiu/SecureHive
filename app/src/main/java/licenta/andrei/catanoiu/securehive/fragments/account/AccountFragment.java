@@ -147,8 +147,8 @@ public class AccountFragment extends Fragment {
             String newName = nameInput.getText().toString().trim();
             String newPhone = phoneInput.getText().toString().trim();
 
-            if (newName.isEmpty()) {
-                nameInput.setError("Please enter your name");
+            if (newName.length() < 3) {
+                nameInput.setError("Please enter your name, minimum 3 characters");
                 return;
             }
 
@@ -177,7 +177,6 @@ public class AccountFragment extends Fragment {
             boolean phoneChanged = !currentPhone.equals(newPhone.trim());
 
             if (!nameChanged && !phoneChanged) {
-                Toast.makeText(getContext(), "No changes to save", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -199,17 +198,6 @@ public class AccountFragment extends Fragment {
                             binding.userPhone.setText(newPhone.trim());
                             cachedPhone = newPhone.trim();
                         }
-
-                        String message = "Profile updated successfully";
-                        if (nameChanged && phoneChanged) {
-                            message = "Name and phone updated successfully";
-                        } else if (nameChanged) {
-                            message = "Name updated successfully";
-                        } else if (phoneChanged) {
-                            message = "Phone updated successfully";
-                        }
-
-                        Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(getContext(), "Failed to update profile: " + e.getMessage(),
@@ -245,7 +233,6 @@ public class AccountFragment extends Fragment {
                 .addOnSuccessListener(aVoid -> {
                     user.delete()
                         .addOnSuccessListener(aVoid2 -> {
-                            Toast.makeText(getContext(), "Account deleted successfully", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(getActivity(), LoginActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             startActivity(intent);
@@ -272,7 +259,9 @@ public class AccountFragment extends Fragment {
             });
         }
         mAuth.signOut();
-        startActivity(new Intent(getActivity(), LoginActivity.class));
+        Intent intent = new Intent(getActivity(), LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         requireActivity().finish();
     }
 

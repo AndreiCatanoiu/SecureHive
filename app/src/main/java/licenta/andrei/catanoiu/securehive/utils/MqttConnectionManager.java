@@ -54,7 +54,7 @@ public class MqttConnectionManager {
         }
         
         if (!isNetworkAvailable()) {
-            String error = "Nu există conexiune la internet";
+            String error = "There is no internet connection";
             Log.e(TAG, error);
             notifyError(error);
             return;
@@ -133,7 +133,7 @@ public class MqttConnectionManager {
                 Log.e(TAG, "Exception message: " + e.getMessage());
                 e.printStackTrace();
                 isConnected = false;
-                notifyError("Eroare neașteptată: " + e.getMessage());
+                notifyError("Unexpected error: " + e.getMessage());
             }
         }).start();
     }
@@ -182,13 +182,29 @@ public class MqttConnectionManager {
             notifyError(error);
             return;
         }
-        
         try {
             mqttClient.subscribe(topic, qos);
             Log.d(TAG, "Subscribed to topic: " + topic);
         } catch (MqttException e) {
             Log.e(TAG, "Error subscribing to topic: " + topic, e);
             String error = "Eroare la abonarea la topic: " + e.getMessage();
+            notifyError(error);
+        }
+    }
+
+    public void unsubscribe(String topic) {
+        if (!isConnected()) {
+            String error = "Nu este conectat la MQTT";
+            Log.e(TAG, error);
+            notifyError(error);
+            return;
+        }
+        try {
+            mqttClient.unsubscribe(topic);
+            Log.d(TAG, "Unsubscribed from topic: " + topic);
+        } catch (MqttException e) {
+            Log.e(TAG, "Error unsubscribing from topic: " + topic, e);
+            String error = "Eroare la dezabonarea de la topic: " + e.getMessage();
             notifyError(error);
         }
     }

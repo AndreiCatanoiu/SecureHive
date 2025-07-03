@@ -1,66 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Brand colors - White theme -->
-    <color name="primary">#1A237E</color>         <!-- Albastru închis pentru elementele principale -->
-    <color name="primary_dark">#0D47A1</color>    <!-- Albastru pentru bara de stare -->
-    <color name="primary_variant">#1565C0</color> <!-- Albastru mai deschis pentru accente -->
+    <color name="primary">#1A237E</color>
+    <color name="primary_dark">#0D47A1</color>
+    <color name="primary_variant">#1565C0</color>
 
-    <!-- Base colors -->
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-    <color name="error">#F44336</color>          <!-- Roșu pentru erori -->
+    <color name="error">#F44336</color>
 
-    <!-- Background colors - White theme -->
-    <color name="background">#FFFFFF</color>      <!-- Alb pentru fundal -->
-    <color name="surface">#FFFFFF</color>         <!-- Alb pentru suprafețe -->
-    <color name="accent_dark">#FFD700</color>     <!-- Auriu pentru accente -->
+    <color name="background">#FFFFFF</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="accent_dark">#FFD700</color>
 
-    <!-- Text colors - White theme -->
-    <color name="text_primary">#000000</color>    <!-- Negru pentru text principal -->
-    <color name="text_secondary">#757575</color>  <!-- Gri pentru text secundar -->
+    <color name="text_primary">#000000</color>
+    <color name="text_secondary">#757575</color>
 
-    <!-- Culori secundare -->
-    <color name="secondary">#0D47A1</color>       <!-- Albastru închis pentru elemente secundare -->
-    <color name="secondary_dark">#002171</color>  <!-- Albastru și mai închis pentru contrast -->
-    <color name="secondary_variant">#1565C0</color><!-- Albastru mai deschis pentru accente secundare -->
+    <color name="secondary">#0D47A1</color>
+    <color name="secondary_dark">#002171</color>
+    <color name="secondary_variant">#1565C0</color>
 
-    <!-- Culori de accent și stare -->
-    <color name="accent">#FFD700</color>          <!-- Auriu pentru evidențiere, folosit și pentru iconul selectat în bottom navigation -->
-    <color name="success">#4CAF50</color>         <!-- Verde pentru stări pozitive -->
-    <color name="warning">#FF9800</color>        <!-- Portocaliu pentru avertizări -->
+    <color name="accent">#FFD700</color>
+    <color name="success">#4CAF50</color>
+    <color name="warning">#FF9800</color>
 
-    <!-- Culori pentru stări -->
-    <color name="online">#4CAF50</color>          <!-- Verde pentru dispozitive online -->
-    <color name="offline">#F44336</color>         <!-- Roșu pentru dispozitive offline -->
-    <color name="maintenance">#FF9800</color>     <!-- Portocaliu pentru mentenanță -->
+    <color name="online">#4CAF50</color>
+    <color name="offline">#F44336</color>
+    <color name="maintenance">#FF9800</color>
 
-    <!-- Culori pentru butoane -->
     <color name="button_primary">@color/accent</color>
     <color name="button_secondary">@color/primary</color>
     <color name="button_disabled">#BDBDBD</color>
 
-    <!-- Culori pentru carduri -->
     <color name="card_background">@color/white</color>
     <color name="card_stroke">@color/primary</color>
 
-    <!-- Culori pentru ripple -->
-    <color name="ripple">#33FFD700</color>        <!-- Efect de ripple auriu transparent -->
-
-    <!-- Culori pentru status dispozitive -->
+    <color name="ripple">#33FFD700</color>
     <color name="green">#4CAF50</color>
     <color name="green_light">#A5D6A7</color>
     <color name="red">#F44336</color>
     <color name="red_light">#EF9A9A</color>
     <color name="orange">#FF9800</color>
     <color name="orange_light">#FFCC80</color>
-    
-    <!-- Additional colors for new features -->
-    <color name="info">#2196F3</color>            <!-- Albastru pentru informații -->
-    <color name="high_severity">#F44336</color>   <!-- Roșu pentru severitate mare -->
-    <color name="medium_severity">#FF9800</color> <!-- Portocaliu pentru severitate medie -->
-    <color name="low_severity">#2196F3</color>    <!-- Albastru pentru severitate mică -->
 
-    <!-- New color for bottom navigation inactive icons -->
-    <color name="bottom_nav_inactive">#1A237E</color> <!-- Albastru pentru iconuri inactive -->
+    <color name="info">#2196F3</color>
+    <color name="high_severity">#F44336</color>
+    <color name="medium_severity">#FF9800</color>
+    <color name="low_severity">#2196F3</color>
+
+    <color name="bottom_nav_inactive">#1A237E</color>
 </resources>

@@ -86,7 +86,6 @@ public class AddDeviceActivity extends AppCompatActivity {
                           @Override
                           public void onCancelled(DatabaseError error) {
                               Log.e(TAG, "Error checking user device", error.toException());
-                              Toast.makeText(AddDeviceActivity.this, "Error checking user device: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                               binding.buttonAdd.setEnabled(true);
                           }
                       });
@@ -114,7 +113,6 @@ public class AddDeviceActivity extends AppCompatActivity {
         db.child("users").child(userId).child("userDevices").child(deviceId).setValue(deviceData)
             .addOnSuccessListener(aVoid -> {
                 Log.d(TAG, "Device successfully added to user's collection");
-                Toast.makeText(this, R.string.device_added_successfully, Toast.LENGTH_SHORT).show();
                 finish();
             })
             .addOnFailureListener(e -> {

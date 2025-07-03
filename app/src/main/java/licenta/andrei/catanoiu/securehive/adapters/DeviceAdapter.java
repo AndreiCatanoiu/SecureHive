@@ -1,4 +1,4 @@
-package licenta.andrei.catanoiu.securehive.devices;
+package licenta.andrei.catanoiu.securehive.adapters;
 
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +28,8 @@ import java.util.Map;
 
 import licenta.andrei.catanoiu.securehive.R;
 import licenta.andrei.catanoiu.securehive.activities.DeviceDetailsActivity;
+import licenta.andrei.catanoiu.securehive.devices.Device;
+import licenta.andrei.catanoiu.securehive.devices.UserDevice;
 import licenta.andrei.catanoiu.securehive.utils.DeviceIdDecoder;
 
 public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder> {
@@ -102,9 +104,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
         holder.deleteDeviceButton.setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle("Șterge dispozitivul");
-            builder.setMessage("Ești sigur că vrei să ștergi dispozitivul \"" + userDevice.getCustomName() + "\"?");
-            builder.setPositiveButton("Șterge", (dialog, which) -> {
+            builder.setTitle("Delete device");
+            builder.setMessage("Are you sure you want to delete the device \"" + userDevice.getCustomName() + "\"?");
+            builder.setPositiveButton("Delete", (dialog, which) -> {
                 String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
                 String deviceKey = userDevice.getDeviceId();
 
@@ -121,13 +123,12 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                                 notifyItemRangeChanged(currentPosition, userDevices.size() - currentPosition);
                             }
                         }
-                        Toast.makeText(context, "Dispozitiv șters cu succes", Toast.LENGTH_SHORT).show();
                     })
                     .addOnFailureListener(e -> {
-                        Toast.makeText(context, "Eroare la ștergere: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Error deleting device: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                     });
             });
-            builder.setNegativeButton("Anulează", (dialog, which) -> dialog.cancel());
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
             builder.show();
         });
 

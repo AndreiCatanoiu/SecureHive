@@ -67,8 +67,8 @@ public class RegisterActivity extends AppCompatActivity {
         String password = passwordInput.getText().toString().trim();
         String confirmPassword = confirmPasswordInput.getText().toString().trim();
 
-        if (name.isEmpty()) {
-            showError("Please enter your name");
+        if (name.length() < 3) {
+            showError("Please enter your name, minimum 3 characters");
             return;
         }
 

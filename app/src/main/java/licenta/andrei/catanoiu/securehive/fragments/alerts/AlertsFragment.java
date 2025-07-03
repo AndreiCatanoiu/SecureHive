@@ -88,7 +88,6 @@ public class AlertsFragment extends Fragment {
             adapter.clearFilters();
             hideFilterOptions();
             updateEmptyState();
-            Toast.makeText(requireContext(), "Filters cleared", Toast.LENGTH_SHORT).show();
         });
 
         setupFilterOptions();
@@ -189,14 +188,12 @@ public class AlertsFragment extends Fragment {
         }
 
         if (filterStartDate != null && filterEndDate != null && filterStartDate.after(filterEndDate)) {
-            Toast.makeText(requireContext(), "Data de început nu poate fi după data de sfârșit!", Toast.LENGTH_LONG).show();
             return;
         }
         adapter.filterByDateRange(filterStartDate, filterEndDate);
 
         hideFilterOptions();
         updateEmptyState();
-        Toast.makeText(requireContext(), "Filters applied", Toast.LENGTH_SHORT).show();
     }
 
     private void loadAlerts() {
@@ -319,18 +316,6 @@ public class AlertsFragment extends Fragment {
                 new Date(),
                 "medium"
         );
-
-        db.child("users").child(userId).child("alerts").push().setValue(testAlert)
-                .addOnSuccessListener(aVoid -> {
-                    adapter.addAlert(testAlert);
-                    updateEmptyState();
-                    NotificationService.showAlertNotification(requireContext(), testAlert);
-                    Toast.makeText(requireContext(), "Test alert added", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error adding test alert", e);
-                    Toast.makeText(requireContext(), "Error adding test alert: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
     }
 
     @Override

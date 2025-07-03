@@ -47,6 +47,8 @@ public class DeviceDetailsActivity extends AppCompatActivity {
     private com.google.firebase.database.ValueEventListener deviceStatusListener;
     private com.google.firebase.database.DatabaseReference dbRealtime;
     private boolean isTryingReconnect = false;
+    private boolean isUpdatingRadioGroup = false;
+    private AlertDialog reconnectDialog = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,17 +84,14 @@ public class DeviceDetailsActivity extends AppCompatActivity {
 
     private void setupMqttClient() {
         Log.d(TAG, "[MQTT] Setup started");
-        
         if (!isNetworkAvailable()) {
             Log.e(TAG, "[MQTT] No network connectivity available");
             runOnUiThread(() -> {
-                Toast.makeText(this, "Nu există conexiune la internet. Verifică conexiunea și încearcă din nou.", Toast.LENGTH_LONG).show();
                 isMqttConnected = false;
                 updateUIForConnectionState();
             });
             return;
         }
-        
         try {
             mqttManager = new MqttConnectionManager(this);
             mqttManager.setConnectionCallback(new MqttConnectionManager.ConnectionCallback() {
@@ -101,43 +100,38 @@ public class DeviceDetailsActivity extends AppCompatActivity {
                     isMqttConnected = true;
                     Log.d(TAG, "[MQTT] Connected successfully!");
                     runOnUiThread(() -> {
-                        Toast.makeText(DeviceDetailsActivity.this, "Conectat la serverul MQTT", Toast.LENGTH_SHORT).show();
+                        if (reconnectDialog != null) {
+                            reconnectDialog.dismiss();
+                            reconnectDialog = null;
+                        }
                         updateUIForConnectionState();
                     });
                 }
-
                 @Override
                 public void onDisconnected(String reason) {
                     isMqttConnected = false;
                     Log.e(TAG, "[MQTT] Connection lost: " + reason);
                     runOnUiThread(() -> {
-                        Toast.makeText(DeviceDetailsActivity.this, "Conexiunea MQTT s-a întrerupt: " + reason, Toast.LENGTH_LONG).show();
                         updateUIForConnectionState();
                     });
                 }
-
                 @Override
                 public void onError(String error) {
                     isMqttConnected = false;
                     Log.e(TAG, "[MQTT] Error: " + error);
                     runOnUiThread(() -> {
-                        Toast.makeText(DeviceDetailsActivity.this, "Eroare MQTT: " + error, Toast.LENGTH_LONG).show();
                         updateUIForConnectionState();
                     });
                 }
-
                 @Override
                 public void onMessageReceived(String topic, String message) {
                     Log.d(TAG, "[MQTT] Message received on topic " + topic + ": " + message);
                 }
             });
-            
             mqttManager.connect();
-            
         } catch (Exception e) {
             isMqttConnected = false;
             Log.e(TAG, "[MQTT] Unexpected error: " + e.getMessage(), e);
-            runOnUiThread(() -> Toast.makeText(this, "Eroare neașteptată: " + e.getMessage(), Toast.LENGTH_LONG).show());
         }
         updateUIForConnectionState();
     }
@@ -153,15 +147,12 @@ public class DeviceDetailsActivity extends AppCompatActivity {
     }
 
     private void loadDeviceInfo() {
-        // Set device name and ID
         deviceName.setText(userDevice.getCustomName());
         deviceId.setText("ID: " + userDevice.getDeviceId());
 
-        // Set device type
         DeviceIdDecoder.DeviceType deviceTypeEnum = DeviceIdDecoder.getDeviceType(userDevice.getDeviceId());
         deviceType.setText("Type: " + deviceTypeEnum.name());
 
-        // Set device image based on type
         switch (deviceTypeEnum) {
             case PIR:
                 deviceImage.setImageResource(R.drawable.pir);
@@ -180,38 +171,51 @@ public class DeviceDetailsActivity extends AppCompatActivity {
             currentStatus = Device.DeviceStatus.OFFLINE;
             deviceStatus.setText("Necunoscut");
             deviceStatus.setTextColor(getColor(R.color.text_secondary));
+            isUpdatingRadioGroup = true;
             statusRadioGroup.clearCheck();
             inactiveRadioButton.setChecked(true);
+            isUpdatingRadioGroup = false;
             statusRadioGroup.setEnabled(false);
             activeRadioButton.setEnabled(false);
             inactiveRadioButton.setEnabled(false);
             updateUIForConnectionState();
             return;
         }
-        currentStatus = device.getStatus();
+
+        boolean isMaintenance = device.isMaintenance();
+        currentStatus = (isMaintenance) ? Device.DeviceStatus.ONLINE : device.getStatus();
         String statusText;
         int statusColor;
-        if (device.isOnline()) {
-            statusText = "Online";
-            statusColor = getColor(R.color.online);
+        isUpdatingRadioGroup = true;
+        if (device.isOnline() || isMaintenance) {
+            if (isMaintenance) {
+                statusText = "Inactive";
+                statusColor = getColor(R.color.maintenance);
+            } else {
+                statusText = "Online";
+                statusColor = getColor(R.color.online);
+            }
             statusRadioGroup.setEnabled(true);
             activeRadioButton.setEnabled(true);
             inactiveRadioButton.setEnabled(true);
-            activeRadioButton.setChecked(true);
-        } else if (device.isMaintenance()) {
-            statusText = "În mentenanță";
-            statusColor = getColor(R.color.maintenance);
-            statusRadioGroup.setEnabled(true);
-            activeRadioButton.setEnabled(true);
-            inactiveRadioButton.setEnabled(true);
-            inactiveRadioButton.setChecked(true);
+            if (isMaintenance) {
+                statusRadioGroup.clearCheck();
+                inactiveRadioButton.setChecked(true);
+                activeRadioButton.setChecked(false);
+            } else {
+                statusRadioGroup.clearCheck();
+                activeRadioButton.setChecked(true);
+                inactiveRadioButton.setChecked(false);
+            }
         } else if (device.isOffline()) {
             statusText = "Offline";
             statusColor = getColor(R.color.offline);
             statusRadioGroup.setEnabled(false);
             activeRadioButton.setEnabled(false);
             inactiveRadioButton.setEnabled(false);
+            statusRadioGroup.clearCheck();
             inactiveRadioButton.setChecked(true);
+            activeRadioButton.setChecked(false);
             if (mqttManager != null) {
                 mqttManager.disconnect();
             }
@@ -221,8 +225,11 @@ public class DeviceDetailsActivity extends AppCompatActivity {
             statusRadioGroup.setEnabled(false);
             activeRadioButton.setEnabled(false);
             inactiveRadioButton.setEnabled(false);
+            statusRadioGroup.clearCheck();
             inactiveRadioButton.setChecked(true);
+            activeRadioButton.setChecked(false);
         }
+        isUpdatingRadioGroup = false;
         deviceStatus.setText(statusText);
         deviceStatus.setTextColor(statusColor);
         updateUIForConnectionState();
@@ -230,11 +237,13 @@ public class DeviceDetailsActivity extends AppCompatActivity {
 
     private void setupRadioGroup() {
         statusRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (currentStatus != Device.DeviceStatus.ONLINE) {
-                // Nu permite modificarea statusului dacă nu e online
+            if (isUpdatingRadioGroup) return;
+            if (currentStatus != Device.DeviceStatus.ONLINE && currentStatus != Device.DeviceStatus.MAINTENANCE) {
                 updateUIForConnectionState();
                 if (inactiveRadioButton != null) {
+                    isUpdatingRadioGroup = true;
                     inactiveRadioButton.setChecked(true);
+                    isUpdatingRadioGroup = false;
                 }
                 return;
             }
@@ -250,22 +259,12 @@ public class DeviceDetailsActivity extends AppCompatActivity {
                 if (!isMqttConnected) {
                     if (!isTryingReconnect) {
                         isTryingReconnect = true;
-                        new androidx.appcompat.app.AlertDialog.Builder(this)
-                                .setTitle("Eroare MQTT")
-                                .setMessage("Conexiunea MQTT nu este activă! Se încearcă reconectarea...")
-                                .setCancelable(false)
-                                .show();
                         setupMqttClient();
                         final String msgToSend = message;
                         new android.os.Handler().postDelayed(() -> {
                             if (isMqttConnected && mqttManager != null && mqttManager.isConnected()) {
                                 publishStatusChange(msgToSend);
                             } else {
-                                new androidx.appcompat.app.AlertDialog.Builder(this)
-                                        .setTitle("Eroare MQTT")
-                                        .setMessage("Nu s-a putut restabili conexiunea MQTT. Încearcă din nou.")
-                                        .setPositiveButton("OK", null)
-                                        .show();
                             }
                             isTryingReconnect = false;
                         }, 3000);
@@ -282,10 +281,10 @@ public class DeviceDetailsActivity extends AppCompatActivity {
             AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.CustomAlertDialog);
             android.view.View view = getLayoutInflater().inflate(R.layout.dialog_edit_profile, null);
             EditText nameInput = view.findViewById(R.id.editName);
-            view.findViewById(R.id.editPhone).setVisibility(android.view.View.GONE); // ascundem câmpul de telefon
+            view.findViewById(R.id.editPhone).setVisibility(android.view.View.GONE);
             nameInput.setText(userDevice.getCustomName());
             builder.setView(view)
-                    .setTitle("Editează numele dispozitivului")
+                    .setTitle("Edit device name")
                     .setPositiveButton(R.string.save, null)
                     .setNegativeButton(R.string.cancel, null);
             AlertDialog dialog = builder.create();
@@ -293,14 +292,11 @@ public class DeviceDetailsActivity extends AppCompatActivity {
             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v2 -> {
                 String newName = nameInput.getText().toString().trim();
                 String currentName = userDevice.getCustomName();
-                if (newName.isEmpty()) {
-                    nameInput.setError("Introduceți un nume");
+                if (newName.length() < 3) {
+                    nameInput.setError("Please enter a name. Minimum 3 characters");
                     return;
                 }
-                if (newName.equals(currentName)) {
-                    Toast.makeText(this, "Nicio modificare de salvat", Toast.LENGTH_SHORT).show();
-                    return;
-                }
+
                 updateDeviceNameInDatabase(newName, dialog, nameInput);
             });
         });
@@ -316,52 +312,38 @@ public class DeviceDetailsActivity extends AppCompatActivity {
                 .addOnSuccessListener(aVoid -> {
                     userDevice.setCustomName(newName);
                     deviceName.setText(newName);
-                    Toast.makeText(this, "Numele a fost actualizat!", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                 })
                 .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Eroare la actualizare nume: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    nameInput.setError("Eroare la actualizare");
+                    nameInput.setError("Error updating");
                 });
         }
     }
 
     private void publishStatusChange(String message) {
         Log.d(TAG, "[MQTT] Attempting to publish: " + message);
-        
-        // Check if device is online
-        if (currentStatus != Device.DeviceStatus.ONLINE) {
-            Toast.makeText(this, "Nu se pot face modificări când dispozitivul este offline sau în mentenanță", Toast.LENGTH_LONG).show();
+        if (currentStatus != Device.DeviceStatus.ONLINE && currentStatus != Device.DeviceStatus.MAINTENANCE) {
             return;
         }
-        
-        // Check MQTT connection
         if (!isMqttConnected || mqttManager == null || !mqttManager.isConnected()) {
             Log.e(TAG, "[MQTT] Not connected. Attempting to reconnect...");
-            Toast.makeText(this, "Conexiunea MQTT nu este activă. Se încearcă reconectarea...", Toast.LENGTH_LONG).show();
-            
-            // Try to reconnect
             setupMqttClient();
-            
-            // Wait a bit and try again
             new android.os.Handler().postDelayed(() -> {
                 if (isMqttConnected && mqttManager != null && mqttManager.isConnected()) {
-                    publishStatusChange(message); // Retry
+                    publishStatusChange(message);
                 } else {
-                    Toast.makeText(this, "Nu s-a putut restabili conexiunea MQTT. Încearcă din nou.", Toast.LENGTH_LONG).show();
                 }
-            }, 3000); // 3 seconds delay
+            }, 3000);
             return;
         }
-
         try {
-            String topic = "andrei/catanoiu/licenta/" + userDevice.getDeviceId() + "/down";
+            String topic = "senzor/licenta/andrei/catanoiu/" + userDevice.getDeviceId() + "/down";
             mqttManager.publish(topic, message, 1);
             Log.d(TAG, "[MQTT] Published to " + topic + ": " + message);
-            Toast.makeText(this, "Status actualizat cu succes", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Status updated successfully", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Log.e(TAG, "[MQTT] Unexpected publish error", e);
-            Toast.makeText(this, "Eroare neașteptată: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Unexpected error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -370,7 +352,6 @@ public class DeviceDetailsActivity extends AppCompatActivity {
         super.onResume();
         if (userDevice != null) {
             loadDeviceInfo();
-            // Ascultă statusul live din Realtime Database
             if (dbRealtime != null && deviceStatusListener == null) {
                 deviceStatusListener = new com.google.firebase.database.ValueEventListener() {
                     @Override
@@ -382,19 +363,18 @@ public class DeviceDetailsActivity extends AppCompatActivity {
                     }
                     @Override
                     public void onCancelled(com.google.firebase.database.DatabaseError error) {
-                        Toast.makeText(DeviceDetailsActivity.this, "Eroare la citirea statusului", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(DeviceDetailsActivity.this, "Error reading status", Toast.LENGTH_SHORT).show();
                     }
                 };
                 dbRealtime.child("devices").child(userDevice.getDeviceId()).addValueEventListener(deviceStatusListener);
             }
-            // Check MQTT connection status and try to reconnect if needed
             if (!isMqttConnected || mqttManager == null || !mqttManager.isConnected()) {
                 Log.d(TAG, "[MQTT] Connection lost, attempting to reconnect in onResume");
                 new android.os.Handler().postDelayed(() -> {
                     if (!isMqttConnected) {
                         setupMqttClient();
                     }
-                }, 1000); // 1 second delay
+                }, 1000);
             }
         }
     }
@@ -402,10 +382,13 @@ public class DeviceDetailsActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Curăț listenerul de status
         if (dbRealtime != null && deviceStatusListener != null && userDevice != null) {
             dbRealtime.child("devices").child(userDevice.getDeviceId()).removeEventListener(deviceStatusListener);
             deviceStatusListener = null;
+        }
+        if (mqttManager != null && userDevice != null && mqttManager.isConnected()) {
+            String topic = "senzor/licenta/andrei/catanoiu/" + userDevice.getDeviceId() + "/down";
+            mqttManager.unsubscribe(topic);
         }
         if (mqttManager != null) {
             mqttManager.disconnect();
@@ -415,6 +398,10 @@ public class DeviceDetailsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (mqttManager != null && userDevice != null && mqttManager.isConnected()) {
+            String topic = "senzor/licenta/andrei/catanoiu/" + userDevice.getDeviceId() + "/down";
+            mqttManager.unsubscribe(topic);
+        }
         if (mqttManager != null) {
             mqttManager.disconnect();
         }
@@ -427,12 +414,13 @@ public class DeviceDetailsActivity extends AppCompatActivity {
             statusRadioGroup.setEnabled(!isOffline);
             for (int i = 0; i < statusRadioGroup.getChildCount(); i++) {
                 statusRadioGroup.getChildAt(i).setEnabled(!isOffline);
-                // Gri dacă e offline
                 statusRadioGroup.getChildAt(i).setAlpha(isOffline ? 0.5f : 1.0f);
             }
             if (isOffline) {
+                isUpdatingRadioGroup = true;
                 statusRadioGroup.clearCheck();
                 inactiveRadioButton.setChecked(true);
+                isUpdatingRadioGroup = false;
             }
         });
     }

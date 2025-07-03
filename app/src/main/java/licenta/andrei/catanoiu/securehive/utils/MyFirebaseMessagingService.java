@@ -3,12 +3,14 @@ package licenta.andrei.catanoiu.securehive.utils;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.navigation.NavDeepLinkBuilder;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -45,13 +47,16 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Alert alert = new Alert(alertId, deviceId, deviceName, deviceType, message, new Date(timestamp), severity);
 
-        Intent intent = new Intent(this, licenta.andrei.catanoiu.securehive.activities.MainActivity.class);
-        intent.putExtra("fragment", "alerts");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        Intent parentIntent = new Intent(this, licenta.andrei.catanoiu.securehive.activities.MainActivity.class);
+        parentIntent.putExtra("fragment", "devices");
+        parentIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        Intent intent = new Intent(this, licenta.andrei.catanoiu.securehive.activities.AlertDetailsActivity.class);
+        intent.putExtra("alert", alert);
 
         int requestCode = new Random().nextInt();
-        PendingIntent pendingIntent = PendingIntent.getActivity(
-                this, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pendingIntent = PendingIntent.getActivities(
+                this, requestCode, new Intent[]{parentIntent, intent}, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NotificationService.CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_warning)

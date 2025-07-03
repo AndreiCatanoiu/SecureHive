@@ -11,15 +11,17 @@
 
     <string name="edit_profile">Edit your profile</string>
     <string name="add_devices">Add a device to your account</string>
-    <string name="addDeviceBtn">Add</string>
     <string name="logOutBtn">Log Out</string>
+
     <string name="add_a_new_device">Add a new device</string>
     <string name="enter_id">Enter the device ID to connect it with the app.</string>
     <string name="device_id">Device ID</string>
+
     <string name="device_name_op">Device name (optional)</string>
     <string name="add_device_btn">Add device</string>
     <string name="device_id_null">Please enter your device ID.</string>
     <string name="device_added_successfully">Device added successfully!</string>
+
     <string name="enter_name">Enter name</string>
     <string name="enter_email">Enter email</string>
     <string name="enter_phone_number">Enter phone number</string>
@@ -27,24 +29,29 @@
     <string name="save">Save</string>
     <string name="device_name">Device Name</string>
     <string name="id">ID</string>
+
     <string name="status">Status</string>
     <string name="logout">Logout</string>
     <string name="welcome_to_app">Welcome to SecureHive</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="loginBtn">Login</string>
+
     <string name="forgot_password">Forgot password?</string>
     <string name="don_t_have_an_account_register">Don\'t have an account? Register</string>
     <string name="create_account">Create an account</string>
+
     <string name="name">Name</string>
     <string name="confirm_password">Confirm Password</string>
     <string name="password_min_chars">Password (min. 6 characters)</string>
     <string name="register">Register</string>
     <string name="already_have_an_account_login">Already have an account? Login</string>
     <string name="Email_address_change">Change the email address for your account</string>
+
     <string name="settings">Settings</string>
     <string name="username">Username</string>
     <string name="email_example">email@example.com</string>
+
     <string name="phone_no_example">+40755555555</string>
     <string name="add_a_device">Add a device to your account</string>
     <string name="device_summary">Devices summary</string>
@@ -58,6 +65,7 @@
     <string name="date_filter">Date Filter</string>
     <string name="delete_account">Delete Account</string>
     <string name="clear">Clear</string>
+
     <string name="select_device">Select Device</string>
     <string name="select_device_type">Select Device Type</string>
     <string name="severity">Severity</string>
@@ -66,6 +74,7 @@
     <string name="start_date">Start Date</string>
     <string name="end_date">End Date</string>
     <string name="no_date_range_selected">No date range selected</string>
+
     <string name="apply_filters">Apply Filters</string>
     <string name="all_devices">All Devices</string>
     <string name="all_types">All Types</string>
@@ -78,15 +87,18 @@
     <string name="device_information">Device information</string>
     <string name="alert_information">Alert information</string>
     <string name="alert_message">Alert message</string>
+
     <string name="timestamp">Timestamp</string>
     <string name="active">Active</string>
     <string name="inactive">Inactive</string>
     <string name="app_description">Secure your home with smart devices</string>
     <string name="welcome_back">Welcome Back</string>
+
     <string name="sign_in">Sign in to your account</string>
     <string name="create_acc">Don\'t have an account?</string>
     <string name="register_btn">Register</string>
     <string name="register_info">Create your secure account</string>
+
     <string name="already_have_an_account">Already have an account?</string>
     <string name="login">Login</string>
     <string name="offline">Offline</string>

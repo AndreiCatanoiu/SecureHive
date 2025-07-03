@@ -29,7 +29,7 @@ import java.util.Map;
 import licenta.andrei.catanoiu.securehive.R;
 import licenta.andrei.catanoiu.securehive.devices.Device;
 import licenta.andrei.catanoiu.securehive.devices.UserDevice;
-import licenta.andrei.catanoiu.securehive.devices.DeviceAdapter;
+import licenta.andrei.catanoiu.securehive.adapters.DeviceAdapter;
 
 public class HomeFragment extends Fragment implements DeviceAdapter.DeviceAdapterListener {
 
@@ -211,7 +211,7 @@ public class HomeFragment extends Fragment implements DeviceAdapter.DeviceAdapte
 
         for (UserDevice userDevice : userDevices) {
             Device device = deviceStatuses.get(userDevice.getDeviceId());
-            if (device != null && device.isOnline()) {
+            if (device != null && (device.isOnline() || device.isMaintenance())) {
                 online++;
             } else {
                 offline++;
@@ -273,7 +273,6 @@ public class HomeFragment extends Fragment implements DeviceAdapter.DeviceAdapte
             .removeValue()
             .addOnSuccessListener(aVoid -> {
                 Log.d(TAG, "Device successfully removed: " + deviceId);
-                Toast.makeText(getContext(), "Device removed successfully", Toast.LENGTH_SHORT).show();
 
                 int currentPosition = userDevices.indexOf(userDevice);
                 if (currentPosition != -1) {
