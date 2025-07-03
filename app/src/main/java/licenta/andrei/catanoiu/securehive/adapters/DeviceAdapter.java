@@ -165,7 +165,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                 statusColor = context.getColor(R.color.offline);
                 break;
             case MAINTENANCE:
-                statusText = "În mentenanță";
+                statusText = "Inactive";
                 statusColor = context.getColor(R.color.maintenance);
                 break;
             default:
